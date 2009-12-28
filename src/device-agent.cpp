@@ -10,6 +10,19 @@
 #include <stdlib.h>
 
 int main(void) {
-	puts("Hello World!!!");
+	//TODO: Initiate Serial Port
+	//TODO: Power on the EXP500
+	//TODO: Make sure got a valid IP
+	//TODO: Negotiate DATA Channel
+	//TODO: Negotiate CONTROL Channel
+	//TODO: Get Current data
+	//TODO: Send out data
+	//TODO: Get status
+	//TODO: send out status if necessary
+	//TODO: Check CONTROL command
+	//TODO: Process command if necessary
+	//TODO: Power off EXP500 if necessary
+	//TODO: read and store data and status, until EXP500 power on
+
 	return EXIT_SUCCESS;
 }
