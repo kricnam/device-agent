@@ -6,7 +6,8 @@
  */
 
 #include "SerialPort.h"
-
+namespace bitcomm
+{
 SerialPort::SerialPort() {
 	// TODO Auto-generated constructor stub
 
@@ -14,4 +15,10 @@ SerialPort::SerialPort() {
 
 SerialPort::~SerialPort() {
 	// TODO Auto-generated destructor stub
+}
+
+void SerialPort::Open(const char* szDev)
+{
+
+}
 }
