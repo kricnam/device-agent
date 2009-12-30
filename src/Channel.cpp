@@ -12,13 +12,10 @@ namespace bitcomm
 
 Channel::Channel()
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 Channel::~Channel()
 {
-	// TODO Auto-generated destructor stub
 }
 
 }

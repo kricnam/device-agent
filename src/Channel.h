@@ -10,14 +10,14 @@
 
 namespace bitcomm
 {
-
 class Channel
 {
 public:
 	Channel();
 	virtual ~Channel();
+	virtual int Read(const char* buff,int len)=0;
+	virtual int Write(const char* buff,int len)=0;
 };
-
 }
 
 #endif /* CHANNEL_H_ */
