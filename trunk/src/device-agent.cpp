@@ -23,6 +23,11 @@ int main(void) {
 	//TODO: Process command if necessary
 	//TODO: Power off EXP500 if necessary
 	//TODO: read and store data and status, until EXP500 power on
+	DataTask  dataProcess;
+	ControlTask controlProcess;
+
+	dataProcess.run();
+	controlProcess.run();
 
 	return EXIT_SUCCESS;
 }

@@ -16,6 +16,7 @@ class Protocol
 public:
 	Protocol();
 	virtual ~Protocol();
+	void RequestCurrentData();
 };
 
 }
