@@ -13,8 +13,7 @@ namespace bitcomm
 
 DataTask::DataTask()
 {
-	// TODO Auto-generated constructor stub
-
+	pidTask=-1;
 }
 
 DataTask::~DataTask()
@@ -25,7 +24,8 @@ DataTask::~DataTask()
 void DataTask::run(void)
 {
 	//Start the thread to read and send data
-
+	if (pidTask == -1) return;
+	pthread_create(&pidTask,NULL,DataTask::doProcess,NULL);
 }
 
 void* DataTask::doProcess(void* pThis)

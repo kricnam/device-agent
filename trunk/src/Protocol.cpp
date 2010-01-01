@@ -21,11 +21,11 @@ Protocol::~Protocol()
 	// TODO Auto-generated destructor stub
 }
 
-void Protocol::RequestCurrentData(Channel& port,Packet& data)
+void Protocol::RequestCurrentData(unsigned char Machine,Channel& port,Packet& data)
 {
-	Packet request;
-	request.setCommand();
-	request.Send(port);
+	CommunicationCommand request;
+	request.setCommand(request.DataRequest,Machine);
+	request.send(port);
 	return data.Read(port);
 }
 
