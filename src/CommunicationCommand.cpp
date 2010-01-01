@@ -21,4 +21,9 @@ CommunicationCommand::~CommunicationCommand()
 	// TODO Auto-generated destructor stub
 }
 
+void CommunicationCommand::setCommand(const char* szCmd,unsigned char Machine)
+{
+	buildPacket(szCmd,2,Machine);
+}
+
 }

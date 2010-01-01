@@ -16,7 +16,7 @@ class Protocol
 public:
 	Protocol();
 	virtual ~Protocol();
-	void RequestCurrentData();
+	void RequestCurrentData(unsigned char Machine,Channel& port,Packet& data);
 };
 
 }

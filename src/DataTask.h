@@ -7,7 +7,7 @@
 
 #ifndef DATATASK_H_
 #define DATATASK_H_
-
+#include "pthread.h"
 namespace bitcomm
 {
 
@@ -21,6 +21,8 @@ public:
 protected:
 	SerialPort& portMP;
 	Modem& modem;
+	pthread_t pidTask;
+
 };
 
 }

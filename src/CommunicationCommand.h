@@ -7,15 +7,16 @@
 
 #ifndef COMMUNICATIONCOMMAND_H_
 #define COMMUNICATIONCOMMAND_H_
-
+#include "Packet.h"
 namespace bitcomm
 {
 
-class CommunicationCommand
+class CommunicationCommand:public virtual Packet
 {
 public:
 	CommunicationCommand();
 	virtual ~CommunicationCommand();
+	static const char DataRequest[] = {'r','a'};
 };
 
 }
