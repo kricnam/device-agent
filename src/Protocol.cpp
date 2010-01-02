@@ -6,7 +6,7 @@
  */
 
 #include "Protocol.h"
-
+#include "CommunicationCommand.h"
 namespace bitcomm
 {
 
@@ -23,10 +23,33 @@ Protocol::~Protocol()
 
 void Protocol::RequestCurrentData(unsigned char Machine,Channel& port,Packet& data)
 {
+	port.Lock();
 	CommunicationCommand request;
-	request.setCommand(request.DataRequest,Machine);
-	request.send(port);
-	return data.Read(port);
+
+	request.SetCommand(request.DataRequest,Machine);
+	request.SendTo(port);
+
+	data.ReceiveFrameFrom(port);
+	port.Unlock();
+	return;
 }
 
+void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
+{
+	if (queue.GetSize()>0)
+	{
+		struct DataPacketFrame& packet=queue.Front();
+		port.Write((char*)&packet,sizeof(struct DataPacketFrame));
+	}
+}
+
+void Protocol::HealthCheck(unsigned char Machine,Channel& dev,Channel& port,Packet& status)
+{
+
+}
+
+int Protocol::Sleep(void)
+{
+	return 0;
+}
 }

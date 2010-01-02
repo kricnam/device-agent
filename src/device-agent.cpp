@@ -9,6 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "DataTask.h"
+#include "ControlTask.h"
+#include "SerialPort.h"
+#include "Modem.h"
+
+using namespace bitcomm;
+
 int main(void) {
 	//TODO: Initiate Serial Port
 	//TODO: Power on the EXP500
@@ -23,8 +30,10 @@ int main(void) {
 	//TODO: Process command if necessary
 	//TODO: Power off EXP500 if necessary
 	//TODO: read and store data and status, until EXP500 power on
-	DataTask  dataProcess;
-	ControlTask controlProcess;
+	SerialPort portMP;
+	Modem sat;
+	DataTask  dataProcess(portMP,sat);
+	ControlTask controlProcess(portMP,sat);
 
 	dataProcess.run();
 	controlProcess.run();

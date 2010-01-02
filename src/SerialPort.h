@@ -15,6 +15,10 @@ public:
 	SerialPort();
 	virtual ~SerialPort();
 	void Open(const char* szDev);
+	virtual int Read(const char* buf,int len);
+	virtual int Write(const char* buf,int len);
+	virtual void Lock(void);
+	virtual void Unlock(void);
 };
 }
 

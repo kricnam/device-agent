@@ -7,6 +7,8 @@
 
 #ifndef CONTROLTASK_H_
 #define CONTROLTASK_H_
+#include "Modem.h"
+#include "SerialPort.h"
 
 namespace bitcomm
 {
@@ -14,7 +16,7 @@ namespace bitcomm
 class ControlTask
 {
 public:
-	ControlTask();
+	ControlTask(SerialPort& port,Modem& m);
 	virtual ~ControlTask();
 	void run(void);
 	static void* doProcess(void* pThis);

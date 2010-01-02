@@ -10,12 +10,35 @@ namespace bitcomm
 {
 TCPPort::TCPPort()
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 TCPPort::~TCPPort()
 {
-	// TODO Auto-generated destructor stub
+
 }
+
+int TCPPort::Open(const char* szServer)
+{
+	return 0;
+}
+
+int TCPPort::Read(const char* buf,int len)
+{
+	return 0;
+}
+
+int TCPPort::Write(const char* buf,int len)
+{
+	return 0;
+}
+void  TCPPort::Lock(void)
+{
+
+}
+void  TCPPort::Unlock(void)
+{
+
+}
+
 }

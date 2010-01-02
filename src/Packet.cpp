@@ -6,6 +6,7 @@
  */
 
 #include "Packet.h"
+#include "CRC16.h"
 namespace bitcomm
 {
 Packet::Packet()
@@ -15,7 +16,7 @@ Packet::Packet()
 
 Packet::~Packet()
 {
-	// TODO Auto-generated destructor stub
+
 }
 
 
@@ -27,20 +28,125 @@ void Packet::buildPacket(const char* szContent,int size,unsigned char Machine)
 	strCache+=STX;
 	strCache.append(szContent,size);
 	strCache+=ETX;
-	unsigned short crc = CRC16::crc16(~0,strCache.c_str()+3,size+1);
+	unsigned short crc = CRC16::crc16(~0,
+			(const unsigned char*)strCache.data()+3,size+1);
 	strCache.append(1,(crc>>8)&0xFF00);
 	strCache.append(1,(crc&0x0FF));
 	strCache+=EOT;
 }
 
-void Packet::send(Channel& port)
+void Packet::SendTo(Channel& port)
 {
 	port.Write(strCache.c_str(),strCache.size());
 }
 
-void Packet::read()
+void Packet::ReceiveAckFrom(Channel& port)
 {
+	strCache.clear();
+	char buff;
+	int n = port.Read(&buff,1);
+
+	if (n==0) return;
+	do
+	{
+		//scan frame start
+		if (strCache.empty())
+		{
+			while(n && ( buff!=ACK || buff!=NAK)) {n = port.Read(&buff,1);};
+			if (n==0) break;
+		}
+
+		do
+		{
+			strCache.append(&buff,1);
+			n = port.Read(&buff,1);
+		} while(n);
+	}
+	while(n);
+}
+
+void Packet::ReceiveFrameFrom(Channel& port)
+{
+	strCache.clear();
+	char buff;
+
+	int n = port.Read(&buff,1);
+	if (n==0) return;
+
+	do
+	{
+		//scan frame start
+		if (strCache.empty())
+		{
+			while(buff!=SOH && n) {n = port.Read(&buff,1);};
+			if (n==0) break;
+		}
+
+		do
+		{
+			strCache.append(&buff,1);
+			if (buff==EOT && isValidFrame()) return;
+			n = port.Read(&buff,1);
+		} while(n);
+	}
+	while(n);
+
+	while(!strCache.empty())
+	{
+		slipToNextStartToken();
+		if (isFrameCRCOK()) return;
+	}
+}
+
+bool Packet::isValidFrame(void)
+{
+	do
+	{
+		if (isFrameCRCOK())
+			return true;
+
+		if (strCache.size()>4056)
+		{
+			slipToNextStartToken();
+			continue;
+		}
+	}
+	while(false);
+	return  false;
+}
+
+bool Packet::isFrameCRCOK(void)
+{
+	if (strCache.size()< 9) return false;
+	int tail = strCache.size() - 1;
+	if (strCache[tail]==EOT && strCache[tail-3]==ETX)
+	{
+		unsigned short crc = CRC16::crc16(~0,
+				(const unsigned char*)strCache.data()+3,strCache.size()-5);
+		return crc == strCache[tail-2]*256 + strCache[tail-1];
+	}
+	return false;
+}
+
+void Packet::slipToNextStartToken(void)
+{
+	string::size_type pos = strCache.find(SOH,1);
+
+	if (pos!=string::npos)
+		strCache = strCache.erase(0,pos);
+	else
+		strCache.clear();
 
 }
 
+const char* Packet::GetData()
+{
+	return strCache.data();
 }
+
+int Packet::GetSize()
+{
+	return strCache.size();
+}
+
+}//name space end

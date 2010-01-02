@@ -8,13 +8,15 @@
 #ifndef DATATASK_H_
 #define DATATASK_H_
 #include "pthread.h"
+#include "SerialPort.h"
+#include "Modem.h"
 namespace bitcomm
 {
 
 class DataTask
 {
 public:
-	DataTask();
+	DataTask(SerialPort& port,Modem& m);
 	virtual ~DataTask();
 	void run(void);
 	static void* doProcess(void* pThis);
@@ -22,7 +24,6 @@ protected:
 	SerialPort& portMP;
 	Modem& modem;
 	pthread_t pidTask;
-
 };
 
 }

@@ -8,6 +8,7 @@
 #ifndef PACKET_H_
 #define PACKET_H_
 #include <string>
+#include "Channel.h"
 using namespace std;
 namespace bitcomm
 {
@@ -17,7 +18,13 @@ public:
 	virtual ~Packet();
 	void setCommand(const char szCmd);
 	void buildPacket(const char* szContent,int size,unsigned char Machine);
-	void send(Channel& port);
+	void SendTo(Channel& port);
+	void ReceiveFrameFrom(Channel& port);
+	void ReceiveAckFrom(Channel& port);
+	bool isFrameCRCOK(void);
+	bool isValidFrame(void);
+	const char* GetData();
+	int GetSize();
 protected:
 	enum Symbol
 	{
@@ -32,6 +39,8 @@ protected:
 	};
 
 	string strCache;
+
+	void slipToNextStartToken(void);
 };
 }
 #endif /* PACKET_H_ */

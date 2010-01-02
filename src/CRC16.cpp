@@ -44,7 +44,7 @@ const unsigned short  CRC16::crc_table_itut[] = {
 };
 
 /* CRC 計算 */
-unsigned short CRC16::crc16(unsigned short start, unsigned char* data,int len)
+unsigned short CRC16::crc16(unsigned short start, const unsigned char* data,int len)
 {
 	unsigned short crc=start;
 
@@ -55,7 +55,7 @@ unsigned short CRC16::crc16(unsigned short start, unsigned char* data,int len)
 }
 
 /* CRC 計算 */
-unsigned short CRC16::crc16(unsigned short start, unsigned char* data,int offset,int len)
+unsigned short CRC16::crc16(unsigned short start, const unsigned  char* data,int offset,int len)
 {
 	char crc=start;
 

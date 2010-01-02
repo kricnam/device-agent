@@ -7,7 +7,8 @@
 
 #ifndef PROTOCOL_H_
 #define PROTOCOL_H_
-
+#include "PacketQueue.h"
+#include "Packet.h"
 namespace bitcomm
 {
 
@@ -17,6 +18,9 @@ public:
 	Protocol();
 	virtual ~Protocol();
 	void RequestCurrentData(unsigned char Machine,Channel& port,Packet& data);
+	void SendCurrentData(Channel& port, DataPacketQueue& queue);
+	int Sleep();
+	void HealthCheck(unsigned char Machine,Channel& dev,Channel& port,Packet& status);
 };
 
 }
