@@ -8,9 +8,10 @@
 #include "TCPPort.h"
 namespace bitcomm
 {
-TCPPort::TCPPort()
+TCPPort::TCPPort(int nInitPort)
 {
-
+	this->nInitPort = nInitPort;
+	nPort = 0;
 }
 
 TCPPort::~TCPPort()
@@ -20,6 +21,7 @@ TCPPort::~TCPPort()
 
 int TCPPort::Open(const char* szServer)
 {
+
 	return 0;
 }
 

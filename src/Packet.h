@@ -25,6 +25,7 @@ public:
 	bool isValidFrame(void);
 	const char* GetData();
 	int GetSize();
+	bool IsAckNo(unsigned short n);
 protected:
 	enum Symbol
 	{

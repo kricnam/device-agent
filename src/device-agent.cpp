@@ -2,13 +2,13 @@
 // Name        : device-agent.cpp
 // Author      : Meng Xinxin
 // Version     :
-// Copyright   : No Warrinty, No Right reserved
+// Copyright   : No Warranty, No Right reserved
 // Description : Hello World in C, Ansi-style
 //============================================================================
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <unistd.h>
 #include "DataTask.h"
 #include "ControlTask.h"
 #include "SerialPort.h"
@@ -17,26 +17,29 @@
 using namespace bitcomm;
 
 int main(void) {
-	//TODO: Initiate Serial Port
-	//TODO: Power on the EXP500
-	//TODO: Make sure got a valid IP
-	//TODO: Negotiate DATA Channel
-	//TODO: Negotiate CONTROL Channel
-	//TODO: Get Current data
-	//TODO: Send out data
-	//TODO: Get status
-	//TODO: send out status if necessary
-	//TODO: Check CONTROL command
-	//TODO: Process command if necessary
-	//TODO: Power off EXP500 if necessary
-	//TODO: read and store data and status, until EXP500 power on
+	//Initiate Serial Port
 	SerialPort portMP;
-	Modem sat;
-	DataTask  dataProcess(portMP,sat);
-	ControlTask controlProcess(portMP,sat);
+
+	//Power on the EXP500,Make sure got a valid IP
+	Modem exp500;
+
+	//Negotiate DATA Channel
+	//Negotiate CONTROL Channel
+	//Get Current data
+	//Send out data
+	//Get status
+	//send out status if necessary
+	//Check CONTROL command
+	//Process command if necessary
+	//Power off EXP500 if necessary
+	//read and store data and status, until EXP500 power on
+
+	DataTask  dataProcess(portMP,exp500);
+	ControlTask controlProcess(portMP,exp500);
 
 	dataProcess.run();
 	controlProcess.run();
 
+	while(1) sleep(60);
 	return EXIT_SUCCESS;
 }

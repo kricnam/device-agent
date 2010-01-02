@@ -14,13 +14,17 @@ namespace bitcomm
 class TCPPort: public virtual Channel
 {
 public:
-	TCPPort();
+	TCPPort(int n);
 	virtual ~TCPPort();
 	int Open(const char* szServer);
 	virtual int Read(const char* buf,int len);
 	virtual int Write(const char* buf,int len);
 	virtual void Lock(void);
 	virtual void Unlock(void);
+protected:
+	int nPort;
+	int nInitPort;
+	string strServerName;
 };
 }
 #endif /* TCPPORT_H_ */
