@@ -7,18 +7,38 @@
 
 #ifndef PACKETQUEUE_H_
 #define PACKETQUEUE_H_
-
+#include <list>
+#include "Packet.h"
 namespace bitcomm
 {
 
-class PacketQueue
+
+struct DataPacketFrame
+{
+	unsigned char SOH;
+	unsigned char Machine;
+	unsigned char STX;
+	unsigned char cmd[2];
+	unsigned short length;
+	unsigned short dataNo;
+	unsigned char dummy[65];
+};
+
+class DataPacketQueue
 {
 public:
-	PacketQueue();
-	virtual ~PacketQueue();
-	void push(Packet& data);
-protected:
+	DataPacketQueue();
+	virtual ~DataPacketQueue();
+	void Push(Packet& data);
+	void Pop(void);
+	int GetSize(void)
+	{
+		return queue.size();
+	};
+	struct DataPacketFrame& Front(void);
 
+protected:
+	list<struct DataPacketFrame> queue;
 };
 
 }

@@ -16,7 +16,11 @@ class CommunicationCommand:public virtual Packet
 public:
 	CommunicationCommand();
 	virtual ~CommunicationCommand();
-	static const char DataRequest[] = {'r','a'};
+
+	static const char DataRequest[2];
+
+	void SetCommand(const char* szCmd,unsigned char Machine);
+
 };
 
 }

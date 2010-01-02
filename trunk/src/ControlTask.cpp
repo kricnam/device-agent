@@ -6,13 +6,15 @@
  */
 
 #include "ControlTask.h"
+#include "Modem.h"
+#include "Protocol.h"
+#include "TCPPort.h"
 
 namespace bitcomm
 {
 
-ControlTask::ControlTask()
+ControlTask::ControlTask(SerialPort& port,Modem& m):portMP(port),modem(m)
 {
-	// TODO Auto-generated constructor stub
 
 }
 
@@ -29,18 +31,19 @@ void ControlTask::run(void)
 void* ControlTask::doProcess(void* pThis)
 {
 	Protocol protocol;
-	TCPPort portServer;
+	//TCPPort portServer;
 
 	while(true)
 	{
-		if (protocol.getCommand())
-			protocol.processCommand();
-		else
+		//if (protocol.getCommand())
+		//	protocol.processCommand();
+		//else
 		{
-			modem.powerOff();
-			modem.waitPowerOn();
+			//modem.powerOff();
+			//modem.waitPowerOn();
 		}
 	}
+	return pThis;
 }
 
 }

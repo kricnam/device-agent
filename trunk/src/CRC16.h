@@ -14,8 +14,8 @@ namespace bitcomm
 class CRC16
 {
 public:
-	static unsigned short crc16(unsigned short start, unsigned char* data,int len);
-	static unsigned short crc16(unsigned short start, unsigned char* data,int offset,int len);
+	static unsigned short crc16(unsigned short start, const unsigned char* data,int len);
+	static unsigned short crc16(unsigned short start, const unsigned char* data,int offset,int len);
 	static inline unsigned short crc16_byte(unsigned char data, unsigned short crc)
 	{
 	    return crc_table_itut[(crc ^ data) & 0x00ff] ^ (crc>>8);
