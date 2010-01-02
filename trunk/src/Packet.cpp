@@ -149,4 +149,10 @@ int Packet::GetSize()
 	return strCache.size();
 }
 
+bool Packet::IsAckNo(unsigned short No)
+{
+
+	return false;
+}
+
 }//name space end
