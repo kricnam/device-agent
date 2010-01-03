@@ -9,22 +9,43 @@
 #define TCPPORT_H_
 
 #include "Channel.h"
+#include <string>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+using namespace std;
 namespace bitcomm
 {
 class TCPPort: public virtual Channel
 {
 public:
-	TCPPort(int n);
+	TCPPort();
 	virtual ~TCPPort();
-	int Open(const char* szServer);
-	virtual int Read(const char* buf,int len);
+	int Open(const char* szServer,int nPort);
+	virtual int Read(char* buf,int len);
 	virtual int Write(const char* buf,int len);
 	virtual void Lock(void);
 	virtual void Unlock(void);
+	void SetTimeOut(int n);
+	void SetRemoteHost(const char* szHost)
+	{
+		strServerName = szHost;
+	};
+	void SetRemotePort(int nPort)
+	{
+		this->nPort = nPort;
+	};
+	int Connect();
+	void Close();
+
 protected:
+
 	int nPort;
-	int nInitPort;
 	string strServerName;
+	int socketID;
+	bool bConnected;
+	int timeout;
 };
 }
 #endif /* TCPPORT_H_ */

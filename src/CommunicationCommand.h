@@ -11,13 +11,19 @@
 namespace bitcomm
 {
 
-class CommunicationCommand:public virtual Packet
+enum CommunicationCommand
+{
+	DataRequest,
+	CMD_END
+};
+
+static const char* cmdWord[]={"ra",""};
+
+class CmdPacket:public virtual Packet
 {
 public:
-	CommunicationCommand();
-	virtual ~CommunicationCommand();
-
-	static const char DataRequest[2];
+	CmdPacket();
+	virtual ~CmdPacket();
 
 	void SetCommand(const char* szCmd,unsigned char Machine);
 

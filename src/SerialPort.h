@@ -18,7 +18,7 @@ public:
 	virtual ~SerialPort();
 	void Open(const char* szDev);
 	void SetCom(void);
-	virtual int Read(const char* buf,int len);
+	virtual int Read(char* buf,int len);
 	virtual int Write(const char* buf,int len);
 	virtual void Lock(void);
 	virtual void Unlock(void);

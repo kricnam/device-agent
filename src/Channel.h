@@ -15,7 +15,7 @@ class Channel
 public:
 	Channel();
 	virtual ~Channel();
-	virtual int Read(const char* buff,int len)=0;
+	virtual int Read(char* buff,int len)=0;
 	virtual int Write(const char* buff,int len)=0;
 	virtual void Lock()=0;
 	virtual void Unlock()=0;

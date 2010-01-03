@@ -10,20 +10,21 @@
 namespace bitcomm
 {
 
-const char CommunicationCommand::DataRequest[]={'r','a'};
 
-CommunicationCommand::CommunicationCommand()
+
+
+CmdPacket::CmdPacket()
 {
 	// TODO Auto-generated constructor stub
 
 }
 
-CommunicationCommand::~CommunicationCommand()
+CmdPacket::~CmdPacket()
 {
 	// TODO Auto-generated destructor stub
 }
 
-void CommunicationCommand::SetCommand(const char* szCmd,unsigned char Machine)
+void CmdPacket::SetCommand(const char* szCmd,unsigned char Machine)
 {
 	buildPacket(szCmd,2,Machine);
 }
