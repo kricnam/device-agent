@@ -40,6 +40,8 @@ void* DataTask::doProcess(void* pThis)
 	Packet currentData;
 	DataPacketQueue dataQueue;
 
+	portServer.Open("127.0.0.1",9999);
+
 	while(1)
 	{
 		protocol.RequestCurrentData(1,task.portMP,currentData);

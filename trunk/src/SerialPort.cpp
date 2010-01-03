@@ -80,7 +80,7 @@ void SerialPort::Unlock(void)
 
 }
 
-int SerialPort::Read(const char* buf,int len)
+int SerialPort::Read(char* buf,int len)
 {
 	if (len==0) return 0;
 	if (handle==-1)
@@ -89,7 +89,7 @@ int SerialPort::Read(const char* buf,int len)
 	int n;
 	do
 	{
-		n = read(handle,(void*)buf,len);
+		n = read(handle,buf,len);
 		if (n>0) return n;
 		if (n==-1)
 		{
