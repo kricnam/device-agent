@@ -7,30 +7,17 @@
 
 #include "Protocol.h"
 #include "CommunicationCommand.h"
+#include "MPHealthCheckCmdPacket.h"
 namespace bitcomm
 {
-struct PortAssign
-{
-	unsigned char soh;
-	unsigned char machine;
-	unsigned char stx;
-	unsigned char cmd0;
-	unsigned char cmd1;
-	unsigned short port;
-	unsigned char etx;
-	unsigned short crc16;
-	unsigned char eot;
-} __attribute__ ((packed));
-
 Protocol::Protocol()
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 Protocol::~Protocol()
 {
-	// TODO Auto-generated destructor stub
+
 }
 
 void Protocol::NegoiateDataChannel(TCPPort& port)
@@ -45,12 +32,15 @@ void Protocol::NegoiateDataChannel(TCPPort& port)
 			port.SetRemotePort(nPort);
 			port.SetTimeOut(5000000);
 			if (port.Connect()>0)
-				break;
-
+			{
+				bExtCommunicationError=false;
+				return;
+			}
 		};
 		nPort = negoiateChannel(port,50001);
 		retry = 3;
 	};
+	bExtCommunicationError=true;
 }
 
 void Protocol::NegoiateControlChannel(TCPPort& port)
@@ -65,12 +55,15 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 			port.SetRemotePort(nPort);
 			port.SetTimeOut(5000000);
 			if (port.Connect()>0)
-				break;
-
+			{
+				bExtCommunicationError=false;
+				return;
+			}
 		};
 		nPort = negoiateChannel(port,50101);
 		retry = 3;
 	};
+	bExtCommunicationError=true;
 }
 
 int Protocol::negoiateChannel(TCPPort& port,int nStartPort)
@@ -81,7 +74,7 @@ int Protocol::negoiateChannel(TCPPort& port,int nStartPort)
 
 	do
 	{
-		if (port.Open("localhost",start_port)<0)
+		if (port.Open(strServerName.c_str(),start_port)<0)
 		{
 			retry++;
 			if (retry==12) break;
@@ -109,16 +102,15 @@ int Protocol::negoiateChannel(TCPPort& port,int nStartPort)
 			continue;
 		}
 
-		struct PortAssign* pPortCmd = (struct PortAssign*)cmd.GetData();
 		port.Close();
-		return pPortCmd->port;
+		return cmd.GetAssignedPort();
 
 	}while(false);
 	return 0;
 }
 
 
-void Protocol::RequestCurrentData(unsigned char Machine,Channel& port,Packet& data)
+void Protocol::RequestCurrentData(Channel& port,Packet& data)
 {
 	port.Lock();
 	CmdPacket request;
@@ -134,11 +126,11 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 	int retry =0;
 	while(queue.GetSize())
 	{
-		struct DataPacketFrame& packet=queue.Front();
-		port.Write((char*)&packet,sizeof(struct DataPacketFrame));
+		Packet& packet=queue.Front();
+		port.Write(packet.GetData(),sizeof(struct  Packet::DataPacketFrame));
 		Packet ack;
 		ack.ReceiveAckFrom(port);
-		if (ack.IsAckNo(packet.dataNo))
+		if (ack.IsAckNo(packet.GetDataNo()))
 		{
 			queue.Pop();
 			retry = 0;
@@ -148,20 +140,35 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 			retry++;
 			if (retry>2)
 			{
-				//TODO:set error
+				bExtCommunicationError=true;
 				return;
 			}
 		}
 	};
 }
 
-void Protocol::HealthCheck(unsigned char Machine,Channel& dev,Channel& port,Packet& status)
+void Protocol::HealthCheck(Channel& dev,Channel& port,Packet& status)
 {
-
+	MPHealthCheckCmdPacket cmd(nLastStatus,Machine);
+	cmd.SendTo(dev);
+	Packet statusAnswer;
+	statusAnswer.ReceiveFrameFrom(dev);
+	if (statusAnswer.IsValidStatus())
+	{
+		unsigned int nNewStatus = statusAnswer.GetStatus();
+		if (nNewStatus!=nLastStatus)
+		{
+			nLastStatus = nNewStatus;
+			statusAnswer.SendTo(port);
+			Packet ack;
+			ack.ReceiveAckFrom(port);
+		}
+	}
 }
 
 int Protocol::Sleep(void)
 {
 	return 0;
 }
+
 }

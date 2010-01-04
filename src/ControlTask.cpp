@@ -13,14 +13,14 @@
 namespace bitcomm
 {
 
-ControlTask::ControlTask(SerialPort& port,Modem& m):portMP(port),modem(m)
+ControlTask::ControlTask(SerialPort& port,Modem& m,Protocol& p):portMP(port),modem(m),protocol(p)
 {
 
 }
 
 ControlTask::~ControlTask()
 {
-	// TODO Auto-generated destructor stub
+
 }
 
 void ControlTask::run(void)

@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/file.h>
 #include "SerialPort.h"
 #include "unistd.h"
 #include "stdio.h"
@@ -72,12 +73,14 @@ void SerialPort::SetCom(void)
 
 void SerialPort::Lock(void)
 {
-
+	if (flock(handle,LOCK_EX)<0)
+		perror("SerialPort::Lock");
 }
 
 void SerialPort::Unlock(void)
 {
-
+	if (flock(handle,LOCK_UN)<0)
+		perror("SerialPort::Unlock");
 }
 
 int SerialPort::Read(char* buf,int len)

@@ -15,14 +15,14 @@
 namespace bitcomm
 {
 
-DataTask::DataTask(SerialPort& port,Modem& m):portMP(port),modem(m)
+DataTask::DataTask(Protocol& p,SerialPort& port,Modem& m):protocol(p),portMP(port),modem(m)
 {
 	pidTask=-1;
 }
 
 DataTask::~DataTask()
 {
-	// TODO Auto-generated destructor stub
+
 }
 
 void DataTask::run(void)
@@ -36,7 +36,7 @@ void* DataTask::doProcess(void* pThis)
 {
 	DataTask& task = *(DataTask*)pThis;
 	TCPPort portServer;
-	Protocol protocol;
+
 	Packet currentData;
 	DataPacketQueue dataQueue;
 
@@ -44,11 +44,11 @@ void* DataTask::doProcess(void* pThis)
 
 	while(1)
 	{
-		protocol.RequestCurrentData(1,task.portMP,currentData);
+		task.protocol.RequestCurrentData(task.portMP,currentData);
 		dataQueue.Push(currentData);
-		protocol.SendCurrentData(portServer,dataQueue);
-		protocol.HealthCheck(1,task.portMP,portServer,currentData);
-		protocol.Sleep();
+		task.protocol.SendCurrentData(portServer,dataQueue);
+		task.protocol.HealthCheck(task.portMP,portServer,currentData);
+		task.protocol.Sleep();
 	};
 
 	return pThis;

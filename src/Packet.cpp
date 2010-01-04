@@ -7,6 +7,7 @@
 
 #include "Packet.h"
 #include "CRC16.h"
+#include "CommunicationCommand.h"
 namespace bitcomm
 {
 Packet::Packet()
@@ -139,9 +140,19 @@ void Packet::slipToNextStartToken(void)
 
 }
 
-const char* Packet::GetData()
+unsigned short Packet::GetDataNo(void)
 {
-	return strCache.data();
+	if (strCache.size()<1) return 0;
+
+	struct DataPacketFrame* pData = (struct DataPacketFrame*) GetData();
+	return pData->dataNo;
+}
+
+unsigned short Packet::GetAssignedPort(void)
+{
+	if (strCache.size()<1) return 0;
+	struct PortAssignFrame* pData = (struct PortAssignFrame*) GetData();
+	return pData->port;
 }
 
 int Packet::GetSize()
@@ -153,6 +164,26 @@ bool Packet::IsAckNo(unsigned short No)
 {
 
 	return false;
+}
+
+bool Packet::IsValidStatus(void)
+{
+	struct HealthCheckStatusAnswerFrame* pData = (struct HealthCheckStatusAnswerFrame*)GetData();
+	if (strCache.size()>0)
+	{
+		return CmdPacket::IsCommand(pData->cmd,MPHealthCheck);
+	}
+	return false;
+}
+
+unsigned int Packet::GetStatus(void)
+{
+	struct HealthCheckStatusAnswerFrame* pData = (struct HealthCheckStatusAnswerFrame*)GetData();
+	if (strCache.size()>0)
+	{
+		return pData->nStatus;
+	}
+	return 0;
 }
 
 }//name space end
