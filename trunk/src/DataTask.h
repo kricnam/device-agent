@@ -10,6 +10,7 @@
 #include "pthread.h"
 #include "SerialPort.h"
 #include "Modem.h"
+#include "Protocol.h"
 #include <string>
 using namespace std;
 namespace bitcomm
@@ -18,13 +19,18 @@ namespace bitcomm
 class DataTask
 {
 public:
-	DataTask(SerialPort& port,Modem& m);
+	DataTask(Protocol& p,SerialPort& port,Modem& m);
 	virtual ~DataTask();
 	void run(void);
 	static void* doProcess(void* pThis);
+
+	Protocol& protocol;
+
 protected:
+
 	SerialPort& portMP;
 	Modem& modem;
+
 	pthread_t pidTask;
 	string strServer;
 };

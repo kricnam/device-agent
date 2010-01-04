@@ -16,6 +16,66 @@ class Packet {
 public:
 	Packet();
 	virtual ~Packet();
+
+	struct FrameHead
+	{
+		unsigned char SOH;
+		unsigned char Machine;
+		unsigned char STX;
+	}__attribute__ ((packed));
+
+	struct FrameEnd
+	{
+		unsigned char ETX;
+		unsigned short CRC16;
+		unsigned char EOT;
+	} __attribute__ ((packed));
+
+	struct FrameTime
+	{
+		unsigned short year;
+		unsigned char month;
+		unsigned char day;
+		unsigned char hour;
+		unsigned char minute;
+	};
+
+	struct DataPacketFrame
+	{
+		struct FrameHead head;
+		unsigned char cmd[2];
+		unsigned short length;
+		unsigned short dataNo;
+		unsigned char dummy[65];
+	}__attribute__ ((packed));
+
+	struct PortAssignFrame
+	{
+		struct FrameHead head;
+		unsigned char cmd[2];
+		unsigned short port;
+	} __attribute__ ((packed));
+
+	struct MPStatus
+	{
+		unsigned int nomean:17;
+		unsigned int extComErr:1;
+		unsigned int intComErr:1;
+		unsigned int nouse:13;
+	};
+
+	struct HealthCheckStatusAnswerFrame
+	{
+		struct FrameHead head;
+		char cmd[2];
+		unsigned short length;
+		unsigned short DataNo;
+		struct FrameTime time;
+		unsigned int nStatus;
+		struct FrameEnd end;
+	} __attribute__ ((packed));
+
+
 	void setCommand(const char szCmd);
 	void buildPacket(const char* szContent,int size,unsigned char Machine);
 	void SendTo(Channel& port);
@@ -23,9 +83,15 @@ public:
 	void ReceiveAckFrom(Channel& port);
 	bool isFrameCRCOK(void);
 	bool isValidFrame(void);
-	const char* GetData();
+	const char* GetData() {return strCache.data();};
 	int GetSize();
+
 	bool IsAckNo(unsigned short n);
+	bool IsValidStatus(void);
+	unsigned short GetDataNo(void);
+	unsigned short GetAssignedPort(void);
+	unsigned int GetStatus(void);
+
 protected:
 	enum Symbol
 	{

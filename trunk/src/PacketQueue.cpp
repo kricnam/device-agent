@@ -22,18 +22,18 @@ DataPacketQueue::~DataPacketQueue()
 
 void DataPacketQueue::Push(Packet& data)
 {
-	list<struct DataPacketFrame>::iterator it;
-	struct DataPacketFrame* pData = (struct DataPacketFrame*)data.GetData();
+	list<Packet>::iterator it;
+
 	for(it = queue.begin();it!=queue.end();it++)
 	{
-		if ((*it).dataNo == pData->dataNo)
+		if ((*it).GetDataNo() == data.GetDataNo())
 			return;
 	}
 
-	queue.push_back(*pData);
+	queue.push_back(data);
 }
 
-struct DataPacketFrame& DataPacketQueue::Front(void)
+Packet& DataPacketQueue::Front(void)
 {
 	return queue.front();
 }

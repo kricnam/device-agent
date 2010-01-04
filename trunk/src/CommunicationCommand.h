@@ -8,16 +8,18 @@
 #ifndef COMMUNICATIONCOMMAND_H_
 #define COMMUNICATIONCOMMAND_H_
 #include "Packet.h"
+#include <string>
 namespace bitcomm
 {
 
 enum CommunicationCommand
 {
 	DataRequest,
+	MPHealthCheck,
 	CMD_END
 };
 
-static const char* cmdWord[]={"ra",""};
+static const char* cmdWord[]={"ra","wa",""};
 
 class CmdPacket:public virtual Packet
 {
@@ -26,7 +28,12 @@ public:
 	virtual ~CmdPacket();
 
 	void SetCommand(const char* szCmd,unsigned char Machine);
-
+	static bool IsCommand(const char* szCmd,enum CommunicationCommand n)
+	{
+		if (n>CMD_END) return false;
+		if (szCmd==NULL) return false;
+		return szCmd[0]==cmdWord[n][0] && szCmd[1]==cmdWord[n][1];
+	}
 };
 
 }

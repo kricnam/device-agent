@@ -12,18 +12,6 @@
 namespace bitcomm
 {
 
-
-struct DataPacketFrame
-{
-	unsigned char SOH;
-	unsigned char Machine;
-	unsigned char STX;
-	unsigned char cmd[2];
-	unsigned short length;
-	unsigned short dataNo;
-	unsigned char dummy[65];
-};
-
 class DataPacketQueue
 {
 public:
@@ -35,10 +23,10 @@ public:
 	{
 		return queue.size();
 	};
-	struct DataPacketFrame& Front(void);
+	Packet& Front(void);
 
 protected:
-	list<struct DataPacketFrame> queue;
+	list<Packet> queue;
 };
 
 }
