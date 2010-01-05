@@ -28,6 +28,7 @@ public:
 	virtual ~CmdPacket();
 
 	void SetCommand(const char* szCmd,unsigned char Machine);
+	enum CommunicationCommand CommandType();
 	static bool IsCommand(const char* szCmd,enum CommunicationCommand n)
 	{
 		if (n>CMD_END) return false;

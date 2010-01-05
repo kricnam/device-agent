@@ -6,7 +6,7 @@
  */
 
 #include "Protocol.h"
-#include "CommunicationCommand.h"
+#include "PacketQueue.h"
 #include "MPHealthCheckCmdPacket.h"
 namespace bitcomm
 {
@@ -165,6 +165,60 @@ void Protocol::HealthCheck(Channel& dev,Channel& port,Packet& status)
 		}
 	}
 }
+
+enum CommunicationCommand Protocol::GetCommand(Channel& port,CmdPacket& cmd)
+{
+	cmd.ReceiveFrameFrom(port);
+	return cmd.CommandType();
+}
+
+void Protocol::TransferCmd(Channel& dev,Channel& port,CmdPacket& cmd)
+{
+	dev.Lock();
+	cmd.SendTo(dev);
+	Packet answer;
+	answer.ReceiveFrameFrom(dev);
+	dev.Unlock();
+	answer.SendTo(port);
+}
+
+void Protocol::HistoryDataTransfer(Channel& dev,Channel& port,HistoryDataRequestCmd& cmd)
+{
+	int nStart = cmd.GetStartNum();
+	int nEnd = cmd.GetEndNum();
+
+	int count=0;
+	DataPacketQueue queue;
+	Packet answer;
+	while (nStart <= nEnd)
+	{
+		dev.Lock();
+		cmd.SendTo(dev);
+
+		answer.ReceiveFrameFrom(dev);
+		dev.Unlock();
+		count++;
+		queue.Push(answer);
+		if (count==10)
+		{
+			SendQueueData(queue,port);
+		}
+		nStart++;
+		cmd.SetStartNum(nStart);
+	};
+}
+
+void Protocol::SendQueueData(DataPacketQueue& queue,Channel& port)
+{
+	Packet& packet;
+	while(queue.GetSize())
+	{
+		packet = queue.Front();
+		packet.SendTo(port);
+	}
+
+}
+
 
 int Protocol::Sleep(void)
 {
