@@ -9,6 +9,8 @@ CPP_SRCS += \
 ../src/CommunicationCommand.cpp \
 ../src/ControlTask.cpp \
 ../src/DataTask.cpp \
+../src/HistoryDataRequestCmd.cpp \
+../src/MPHealthCheckCmdPacket.cpp \
 ../src/Modem.cpp \
 ../src/Packet.cpp \
 ../src/PacketQueue.cpp \
@@ -23,6 +25,8 @@ OBJS += \
 ./src/CommunicationCommand.o \
 ./src/ControlTask.o \
 ./src/DataTask.o \
+./src/HistoryDataRequestCmd.o \
+./src/MPHealthCheckCmdPacket.o \
 ./src/Modem.o \
 ./src/Packet.o \
 ./src/PacketQueue.o \
@@ -37,6 +41,8 @@ CPP_DEPS += \
 ./src/CommunicationCommand.d \
 ./src/ControlTask.d \
 ./src/DataTask.d \
+./src/HistoryDataRequestCmd.d \
+./src/MPHealthCheckCmdPacket.d \
 ./src/Modem.d \
 ./src/Packet.d \
 ./src/PacketQueue.d \

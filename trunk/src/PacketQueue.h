@@ -24,6 +24,7 @@ public:
 		return queue.size();
 	};
 	Packet& Front(void);
+	Packet& GetAt(int i);
 
 protected:
 	list<Packet> queue;

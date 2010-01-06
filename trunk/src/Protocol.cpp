@@ -210,13 +210,23 @@ void Protocol::HistoryDataTransfer(Channel& dev,Channel& port,HistoryDataRequest
 
 void Protocol::SendQueueData(DataPacketQueue& queue,Channel& port)
 {
-	Packet& packet;
-	while(queue.GetSize())
+	do
 	{
-		packet = queue.Front();
-		packet.SendTo(port);
-	}
-
+		for(int i=0;i<queue.GetSize();i++)
+		{
+			queue.GetAt(i).SendTo(port);
+		}
+		Packet ack;
+		ack.ReceiveAckFrom(port);
+		//TODO:
+		//if (ack.IsValid() && ack.IsAck())
+		{
+			int ackNo =  ack.GetAckNo();
+			while(queue.GetSize()&&
+					ackNo >= queue.Front().GetDataNo())
+				queue.Pop();
+		}
+	}while(queue.GetSize());
 }
 
 

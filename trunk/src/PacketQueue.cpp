@@ -37,6 +37,16 @@ Packet& DataPacketQueue::Front(void)
 {
 	return queue.front();
 }
+Packet& DataPacketQueue::GetAt(int i)
+{
+	list<Packet>::iterator it;
+	int count = 0;
+	for(it = queue.begin();it!=queue.end();it++)
+	{
+		if (count++== i) break;
+	}
+	return (*it);
+}
 
 void DataPacketQueue::Pop(void)
 {

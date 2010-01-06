@@ -75,20 +75,25 @@ public:
 		struct FrameEnd end;
 	} __attribute__ ((packed));
 
+	struct AcKFrame
+	{
+		char ack;
+		unsigned char Machine;
+		char cmd[2];
+		unsigned short dataNumber;
+	};
 
-	void setCommand(const char szCmd);
+	const char* GetData() {return strCache.data();};
+	int GetSize() 	{return strCache.size();};
+
 	void buildPacket(const char* szContent,int size,unsigned char Machine);
 	void SendTo(Channel& port);
 	void ReceiveFrameFrom(Channel& port);
 	void ReceiveAckFrom(Channel& port);
-	bool isFrameCRCOK(void);
-	bool isValidFrame(void);
-	const char* GetData() {return strCache.data();};
-	int GetSize();
-
 	bool IsAckNo(unsigned short n);
 	bool IsValidStatus(void);
 	unsigned short GetDataNo(void);
+	unsigned short GetAckNo(void);
 	unsigned short GetAssignedPort(void);
 	unsigned int GetStatus(void);
 
@@ -108,6 +113,8 @@ protected:
 	string strCache;
 
 	void slipToNextStartToken(void);
+	bool isFrameCRCOK(void);
+	bool isValidFrame(void);
 };
 }
 #endif /* PACKET_H_ */

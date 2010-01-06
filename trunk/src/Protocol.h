@@ -30,7 +30,7 @@ public:
 	enum CommunicationCommand GetCommand(Channel& port,CmdPacket& cmd);
 	void TransferCmd(Channel& dev,Channel& port,CmdPacket& cmd);
 	void HistoryDataTransfer(Channel& dev,Channel& port,HistoryDataRequestCmd& cmd);
-
+	void SendQueueData(DataPacketQueue& queue,Channel& port);
 protected:
 	int negoiateChannel(TCPPort& port,int nStartPort);
 	bool bExtCommunicationError;
