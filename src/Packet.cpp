@@ -155,15 +155,14 @@ unsigned short Packet::GetAssignedPort(void)
 	return pData->port;
 }
 
-int Packet::GetSize()
-{
-	return strCache.size();
-}
 
 bool Packet::IsAckNo(unsigned short No)
 {
+	struct AcKFrame* p = (struct AcKFrame*)GetData();
+    return (strCache.size() == sizeof(struct AcKFrame)
+    		&& p->ack == ACK
+    		&& p->dataNumber == No);
 
-	return false;
 }
 
 bool Packet::IsValidStatus(void)
@@ -184,6 +183,12 @@ unsigned int Packet::GetStatus(void)
 		return pData->nStatus;
 	}
 	return 0;
+}
+unsigned short Packet::GetAckNo(void)
+{
+	if (strCache.size()==4) return 0;
+	struct AcKFrame* p = (struct AcKFrame*)GetData();
+	return p->dataNumber;
 }
 
 }//name space end
