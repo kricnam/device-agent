@@ -171,12 +171,29 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 	while (queue.GetSize())
 	{
 		Packet& packet = queue.Front();
-		port.Write(packet.GetData(), sizeof(struct Packet::DataPacketFrame));
-		setLastActionTime(packet.GetTime());
 		Packet ack;
-		ack.ReceiveAckFrom(port);
-		setLastActionTime(ack.GetTime());
-		if (ack.IsAckNo(packet.GetDataNo()))
+		try
+		{
+			port.Write(packet.GetData(), sizeof(struct Packet::DataPacketFrame));
+			setLastActionTime(packet.GetTime());
+			ack.ReceiveAckFrom(port);
+			setLastActionTime(ack.GetTime());
+		}
+		catch(ChannelException& e)
+		{
+			if (e.bUnConnected)
+			{
+				if (typeid(port) == typeid(TCPPort))
+				{
+					NegoiateDataChannel(dynamic_cast<TCPPort&> (port));
+				}
+				else
+					port.Open();
+				continue;
+			}
+		}
+
+		if (ack.IsAck() && ack.IsAckNo(packet.GetDataNo()))
 		{
 			queue.Pop();
 			retry = 0;
