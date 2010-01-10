@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <typeinfo>
+#include <stdio.h>
 
 namespace bitcomm
 {
@@ -142,17 +143,24 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 
 void Protocol::RequestCurrentData(Channel& port, Packet& data)
 {
-	if (!isTimeForAction(tmCurrentDataActive)) return;
-	setReservedTime(tmCurrentDataActive,10*60);
+	if (!isTimeForAction(tmCurrentDataActive))
+		return;
+	setReservedTime(tmCurrentDataActive, 10 * 60);
 
 	port.Lock();
-	CmdPacket request;
-	request.SetCommand(cmdWord[DataRequest], Machine);
-	request.SendTo(port);
-	setLastActionTime(request.GetTime());
+	try
+	{
+		CmdPacket request;
+		request.SetCommand(cmdWord[DataRequest], Machine);
+		request.SendTo(port);
+		setLastActionTime(request.GetTime());
 
-	data.ReceiveFrameFrom(port);
-	setLastActionTime(data.GetTime());
+		data.ReceiveFrameFrom(port);
+		setLastActionTime(data.GetTime());
+	} catch (ChannelException& e)
+	{
+
+	}
 	port.Unlock();
 	return;
 }
@@ -187,8 +195,9 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 
 void Protocol::HealthCheck(Channel& dev, Packet& status)
 {
-	if (!isTimeForAction(tmHealthCheckActive)) return;
-	setReservedTime(tmHealthCheckActive,30);
+	if (!isTimeForAction(tmHealthCheckActive))
+		return;
+	setReservedTime(tmHealthCheckActive, 30);
 	MPHealthCheckCmdPacket cmd(nLastStatus, Machine);
 	cmd.SendTo(dev);
 	setLastActionTime(cmd.GetTime());
@@ -222,14 +231,13 @@ enum CommunicationCommand Protocol::GetCommand(Channel& port, CmdPacket& cmd)
 		{
 			cmd.ReceiveFrameFrom(port);
 			setLastActionTime(cmd.GetTime());
-		}
-		catch (ChannelException& e)
+		} catch (ChannelException& e)
 		{
 			if (e.bUnConnected)
 			{
 				if (typeid(port) == typeid(TCPPort))
 				{
-					NegoiateControlChannel(dynamic_cast<TCPPort&>(port));
+					NegoiateControlChannel(dynamic_cast<TCPPort&> (port));
 				}
 				else
 					port.Open();
@@ -244,13 +252,26 @@ enum CommunicationCommand Protocol::GetCommand(Channel& port, CmdPacket& cmd)
 void Protocol::TransferCmd(Channel& dev, Channel& port, CmdPacket& cmd)
 {
 	dev.Lock();
-	cmd.SendTo(dev);
-	setLastActionTime(cmd.GetTime());
-	Packet answer;
-	answer.ReceiveFrameFrom(dev);
+	try
+	{
+		cmd.SendTo(dev);
+		setLastActionTime(cmd.GetTime());
+	} catch (ChannelException& e)
+	{
+		printf("%s",e.what());
+	}
 	dev.Unlock();
-	answer.SendTo(port);
-	setLastActionTime(answer.GetTime());
+	try
+	{
+		Packet answer;
+		answer.ReceiveFrameFrom(dev);
+		answer.SendTo(port);
+		setLastActionTime(answer.GetTime());
+	}
+	catch(ChannelException& e)
+	{
+		printf("%s",e.what());
+	}
 }
 
 void Protocol::HistoryDataTransfer(Channel& dev, Channel& port,
@@ -308,7 +329,7 @@ int Protocol::Sleep(void)
 	return 0;
 }
 
-void Protocol::setReservedTime(struct timeval& timer, int n,bool bAlign)
+void Protocol::setReservedTime(struct timeval& timer, int n, bool bAlign)
 {
 	struct timeval tmNow;
 	gettimeofday(&tmNow, 0);

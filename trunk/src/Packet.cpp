@@ -4,10 +4,11 @@
  *  Created on: 2009-12-28
  *      Author: mxx
  */
-
+#include "CommunicationCommand.h"
 #include "Packet.h"
 #include "CRC16.h"
-#include "CommunicationCommand.h"
+#include <string>
+using namespace std;
 namespace bitcomm
 {
 Packet::Packet()
@@ -20,96 +21,118 @@ Packet::~Packet()
 
 }
 
-
-void Packet::buildPacket(const char* szContent,int size,unsigned char Machine)
+void Packet::buildPacket(const char* szContent, int size, unsigned char Machine)
 {
 	strCache.clear();
-	strCache+=SOH;
-	strCache.append(1,Machine);
-	strCache+=STX;
-	strCache.append(szContent,size);
-	strCache+=ETX;
+	strCache += SOH;
+	strCache.append(1, Machine);
+	strCache += STX;
+	strCache.append(szContent, size);
+	strCache += ETX;
 	unsigned short crc = CRC16::crc16(~0,
-			(const unsigned char*)strCache.data()+3,size+1);
-	strCache.append(1,(crc>>8)&0xFF00);
-	strCache.append(1,(crc&0x0FF));
-	strCache+=EOT;
+			(const unsigned char*) (strCache.data()) + 3, size + 1);
+	strCache.append(1, (crc >> 8) & 0xFF00);
+	strCache.append(1, (crc & 0x0FF));
+	strCache += EOT;
 }
 
-void Packet::SendTo(Channel& port)
+void Packet::SendTo(Channel & port)
 {
-	port.Write(strCache.c_str(),strCache.size());
-	gettimeofday(&tmActionTime,0);
+	port.Write(strCache.c_str(), strCache.size());
+	gettimeofday(&tmActionTime, 0);
 }
 
-void Packet::ReceiveAckFrom(Channel& port)
+void Packet::ReceiveAckFrom(Channel & port)
 {
 	strCache.clear();
 	char buff;
-	int n = port.Read(&buff,1);
-
-	if (n==0) return;
+	int n = port.Read(&buff, 1);
+	if (n == 0)
+		return;
 
 	do
 	{
 		//scan frame start
 		if (strCache.empty())
 		{
-			while(n && ( buff!=ACK || buff!=NAK))
+			while (n && (buff != ACK || buff != NAK))
 			{
-				n = port.Read(&buff,1);
-				if (n) gettimeofday(&tmActionTime,0);
-			};
-			if (n==0) break;
-		}
+				n = port.Read(&buff, 1);
+				if (n)
+					gettimeofday(&tmActionTime, 0);
 
+			};
+			if (n == 0)
+				break;
+
+		}
 		do
 		{
-			strCache.append(&buff,1);
-			n = port.Read(&buff,1);
-			if (n) gettimeofday(&tmActionTime,0);
-		} while(n);
-	}
+			strCache.append(&buff, 1);
+			n = port.Read(&buff, 1);
+			if (n)
+				gettimeofday(&tmActionTime, 0);
 
-	while(n);
+		} while (n);
+	} while (n);
 }
 
-void Packet::ReceiveFrameFrom(Channel& port)
+void Packet::ReceiveFrameFrom(Channel & port)
 {
 	strCache.clear();
 	char buff;
-
-	int n = port.Read(&buff,1);
-	if (n==0) return;
+	int n = port.Read(&buff, 1);
+	if (n == 0)
+		return;
 
 	do
 	{
 		//scan frame start
 		if (strCache.empty())
 		{
-			while(buff!=SOH && n)
+			while (buff != SOH && n)
 			{
-				n = port.Read(&buff,1);
-				if (n) gettimeofday(&tmActionTime,0);
+				n = port.Read(&buff, 1);
+				if (n)
+					gettimeofday(&tmActionTime, 0);
+
 			};
-			if (n==0) break;
+			if (n == 0)
+				break;
 
 		}
-
 		do
 		{
-			strCache.append(&buff,1);
-			if (buff==EOT && isValidFrame()) return;
-			n = port.Read(&buff,1);
-			if (n) gettimeofday(&tmActionTime,0);
-		} while(n);
-	}
-	while(n);
+			strCache.append(&buff, 1);
+			if (buff == EOT && isValidFrame())
+				return;
 
-	while(!strCache.empty())
+			n = port.Read(&buff, 1);
+			if (n)
+				gettimeofday(&tmActionTime, 0);
+
+		} while (n);
+	} while (n);
+	while (!strCache.empty())
 	{
 		slipToNextStartToken();
-		if (isFrameCRCOK()) return;
+		if (isFrameCRCOK())
+			return;
+
+	}
+}
+
+void Packet::Ack(bool bAck, enum CommunicationCommand eCmd, short nNum)
+{
+	strCache.clear();
+	if (bAck) strCache.append((char)ACK,1);
+	else strCache.append((char)NAK,1);
+
+	strCache.append(cmdWord[eCmd],2);
+	if (nNum)
+	{
+		strCache.append((nNum>>8) & 0xFF,1);
+		strCache.append(nNum & 0xFF,1);
 	}
 }
 
@@ -120,100 +143,103 @@ bool Packet::isValidFrame(void)
 		if (isFrameCRCOK())
 			return true;
 
-		if (strCache.size()>4056)
+		if (strCache.size() > 4056)
 		{
 			slipToNextStartToken();
 			continue;
 		}
-	}
-	while(false);
-	return  false;
+	} while (false);
+	return false;
 }
 
 bool Packet::isFrameCRCOK(void)
 {
-	if (strCache.size()< 9) return false;
+	if (strCache.size() < 9)
+		return false;
+
 	int tail = strCache.size() - 1;
-	if (strCache[tail]==EOT && strCache[tail-3]==ETX)
+	if (strCache[tail] == EOT && strCache[tail - 3] == ETX)
 	{
 		unsigned short crc = CRC16::crc16(~0,
-				(const unsigned char*)strCache.data()+3,strCache.size()-5);
-		return crc == strCache[tail-2]*256 + strCache[tail-1];
+				(const unsigned char*) (strCache.data()) + 3, strCache.size()
+						- 5);
+		return crc == strCache[tail - 2] * 256 + strCache[tail - 1];
 	}
 	return false;
 }
 
 void Packet::slipToNextStartToken(void)
 {
-	string::size_type pos = strCache.find(SOH,1);
+	string::size_type pos = strCache.find(SOH, 1);
+	if (pos != string::npos)
+		strCache = strCache.erase(0, pos);
 
-	if (pos!=string::npos)
-		strCache = strCache.erase(0,pos);
 	else
 		strCache.clear();
 
 }
-
 unsigned short Packet::GetDataNo(void)
 {
-	if (strCache.size()<1) return 0;
+	if (strCache.size() < 1)
+		return 0;
 
-	struct DataPacketFrame* pData = (struct DataPacketFrame*) GetData();
+	struct DataPacketFrame *pData = (struct DataPacketFrame*) (GetData());
 	return pData->dataNo;
 }
-
 unsigned short Packet::GetAssignedPort(void)
 {
-	if (strCache.size()<1) return 0;
-	struct PortAssignFrame* pData = (struct PortAssignFrame*) GetData();
+	if (strCache.size() < 1)
+		return 0;
+
+	struct PortAssignFrame *pData = (struct PortAssignFrame*) (GetData());
 	return pData->port;
 }
-
-
 bool Packet::IsAckNo(unsigned short No)
 {
-	struct AcKFrame* p = (struct AcKFrame*)GetData();
-    return (strCache.size() == sizeof(struct AcKFrame)
-    		&& p->ack == ACK
-    		&& p->dataNumber == No);
-
+	struct AcKFrame *p = (struct AcKFrame*) (GetData());
+	return (strCache.size() == sizeof(struct AcKFrame) && p->ack == ACK
+			&& p->dataNumber == No);
 }
 
 bool Packet::IsValidStatus(void)
 {
-	struct HealthCheckStatusAnswerFrame* pData = (struct HealthCheckStatusAnswerFrame*)GetData();
-	if (strCache.size()>0)
+	struct HealthCheckStatusAnswerFrame *pData =
+			(struct HealthCheckStatusAnswerFrame*) (GetData());
+	if (strCache.size() > 0)
 	{
-		return CmdPacket::IsCommand(pData->cmd,MPHealthCheck);
+		return CmdPacket::IsCommand(pData->cmd, MPHealthCheck);
 	}
 	return false;
 }
 
 unsigned int Packet::GetStatus(void)
 {
-	struct HealthCheckStatusAnswerFrame* pData = (struct HealthCheckStatusAnswerFrame*)GetData();
-	if (strCache.size()>0)
+	struct HealthCheckStatusAnswerFrame *pData =
+			(struct HealthCheckStatusAnswerFrame*) (GetData());
+	if (strCache.size() > 0)
 	{
 		return pData->nStatus;
 	}
 	return 0;
 }
+
 unsigned short Packet::GetAckNo(void)
 {
-	if (strCache.size()==4) return 0;
-	struct AcKFrame* p = (struct AcKFrame*)GetData();
+	if (strCache.size() == 4)
+		return 0;
+
+	struct AcKFrame *p = (struct AcKFrame*) (GetData());
 	return p->dataNumber;
 }
 
 bool Packet::IsValidAck(void)
 {
-	return (!strCache.empty()) &&
-			(strCache[0]==ACK || strCache[0]==NAK);
+	return (!strCache.empty()) && (strCache[0] == ACK || strCache[0] == NAK);
 }
 
 bool Packet::IsAck(void)
 {
-	return 	strCache[0]==ACK;
+	return strCache[0] == ACK;
 }
 
 }//name space end

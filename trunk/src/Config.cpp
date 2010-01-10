@@ -99,4 +99,14 @@ string Config::GetServerName()
 		return tmp;
 	return "";
 }
+
+int Config::GetMachine()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"MACHINE",tmp,1024)==0)
+	{
+		return atoi(tmp);
+	}
+	return 0;
+}
 }
