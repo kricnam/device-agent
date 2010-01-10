@@ -42,6 +42,25 @@ public:
 	bool IsTimeForSleep(void);
 	void SleepForPowerOn(void);
 	void PatrolRest(void);
+    bool getExtCommunicationError() const
+    {
+        return bExtCommunicationError;
+    }
+
+    unsigned char getMachine() const
+    {
+        return Machine;
+    }
+
+    void setExtCommunicationError(bool bExtCommunicationError)
+    {
+        this->bExtCommunicationError = bExtCommunicationError;
+    }
+
+    void setMachine(unsigned char Machine)
+    {
+        this->Machine = Machine;
+    }
 
 protected:
 

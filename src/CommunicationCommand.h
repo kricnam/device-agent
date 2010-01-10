@@ -12,42 +12,6 @@
 namespace bitcomm
 {
 
-enum CommunicationCommand
-{
-	DataRequest,
-	MPHealthCheck,
-	GetCondition,
-	SetCondition,
-	GetPreAmp,
-	GetADCSetting,
-	GetSpectrumSetting,
-	GetNetworkSetting,
-	SetLowHiDoesRateAlarmReset,
-	SetTransmitUnitHardwareReset,
-	SetTransmitUnitReset,
-	SetTransmitUnitMemortClear,
-	GetTime,
-	SetTime,
-	RequestDoseRate,
-	ConfirmDoseRate,
-	RequestSpectrum,
-	ConfirmSpectrum,
-	RequestDoseRateAlarm,
-	ConfirmDoseRateAlarm,
-	Request40KAction,
-	Confirm40KAction,
-	RequestGPS,
-	ConfirmGPS,
-	RequestDataCancel,
-	DataTerminate,
-	SetDataPort,
-	SetControlPort,
-	ControlPortHealthCheck,
-	CMD_END
-};
-
-static const char* cmdWord[]={"ra","wa","ca","cA","cb","cc","cd","ce","cF","cH","cI","cJ",
-"ck","cK","ha","hA","hc","hC","hd","hD","hf","hF","hg","hG","hy","hz","pA","pB","wb",""};
 
 class CmdPacket:public virtual Packet
 {

@@ -24,6 +24,7 @@ int main(void) {
 	Config config("./agent.conf");
 
 	Protocol protocol(config.GetServerName().c_str());
+	protocol.setMachine(config.GetMachine());
 	DataTask  dataProcess(protocol,portMP,exp500);
 	ControlTask controlProcess(portMP,exp500,protocol);
 
