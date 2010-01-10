@@ -30,18 +30,73 @@ void ControlTask::run(void)
 
 void* ControlTask::doProcess(void* pThis)
 {
-	//Protocol protocol;
-	//TCPPort portServer;
+	ControlTask& task = *(ControlTask*)pThis;
+	TCPPort port;
+	CmdPacket cmd;
+	enum CommunicationCommand eCmd;
 
 	while(true)
 	{
-		//if (protocol.getCommand())
-		//	protocol.processCommand();
-		//else
+		if (task.modem.IsPowerOff()) task.modem.PowerOn();
+		eCmd = task.protocol.GetCommand(port,cmd);
+		switch(eCmd)
 		{
-			//modem.powerOff();
-			//modem.waitPowerOn();
+		case DataRequest:
+		case MPHealthCheck:
+			break;
+		case GetCondition:
+		case SetCondition:
+		case GetPreAmp:
+		case GetADCSetting:
+		case GetSpectrumSetting:
+		case SetLowHiDoesRateAlarmReset:
+		case GetTime:
+		case RequestDoseRate:
+		case RequestSpectrum:
+		case RequestDoseRateAlarm:
+		case Request40KAction:
+		case RequestGPS:
+			task.protocol.TransferCmd(task.portMP,port,cmd);
+			break;
+		case GetNetworkSetting:
+			break;
+		case SetTransmitUnitHardwareReset:
+			break;
+		case SetTransmitUnitReset:
+			break;
+		case SetTransmitUnitMemortClear:
+			break;
+		case SetTime:
+			//TODO:SetLocalTime();
+			task.protocol.TransferCmd(task.portMP,port,cmd);
+			break;
+		case ConfirmDoseRate:
+		case ConfirmSpectrum:
+		case ConfirmDoseRateAlarm:
+		case Confirm40KAction:
+		case ConfirmGPS:
+		{
+			HistoryDataRequestCmd hcmd(cmd);
+			task.protocol.HistoryDataTransfer(task.portMP,port,hcmd);
+			break;
 		}
+		case RequestDataCancel:
+		case DataTerminate:
+		case SetDataPort:
+		case SetControlPort:
+			break;
+		case ControlPortHealthCheck:
+			//TODO:send ACK frame;
+			break;
+		case CMD_END:
+			if (task.protocol.IsTimeForSleep())
+			{
+				//Modem Power off
+				task.modem.PowerOff();
+				task.protocol.SleepForPowerOn();
+			}
+			break;
+		};
 	}
 	return pThis;
 }

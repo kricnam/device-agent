@@ -28,6 +28,7 @@ public:
 	} __attribute__ ((packed));
 
 	HistoryDataRequestCmd();
+	HistoryDataRequestCmd(CmdPacket& pack) {strCache = string(pack.GetData(),pack.GetSize());};
 	virtual ~HistoryDataRequestCmd();
 	int GetStartNum(void)
 	{

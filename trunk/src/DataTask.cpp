@@ -44,9 +44,18 @@ void* DataTask::doProcess(void* pThis)
 	{
 		task.protocol.RequestCurrentData(task.portMP,currentData);
 		dataQueue.Push(currentData);
-		task.protocol.SendCurrentData(portServer,dataQueue);
-		task.protocol.HealthCheck(task.portMP,portServer,currentData);
-		task.protocol.Sleep();
+		if (!task.modem.IsPowerOff())
+		{
+			task.protocol.SendCurrentData(portServer,dataQueue);
+		}
+
+		task.protocol.HealthCheck(task.portMP,currentData);
+		if (!task.modem.IsPowerOff())
+		{
+			task.protocol.HealthCheckReport(portServer,currentData);
+		}
+
+		task.protocol.PatrolRest();
 	};
 
 	return pThis;

@@ -15,13 +15,12 @@ namespace bitcomm
 
 CmdPacket::CmdPacket()
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 CmdPacket::~CmdPacket()
 {
-	// TODO Auto-generated destructor stub
+
 }
 
 void CmdPacket::SetCommand(const char* szCmd,unsigned char Machine)
