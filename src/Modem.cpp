@@ -12,13 +12,25 @@ namespace bitcomm
 
 Modem::Modem()
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 Modem::~Modem()
 {
-	// TODO Auto-generated destructor stub
+}
+
+void Modem::PowerOn(void)
+{
+	bPowerOff = false;
+}
+
+bool Modem::IsPowerOff(void)
+{
+	return bPowerOff;
+}
+
+void Modem::PowerOff(void)
+{
+	bPowerOff = true;
 }
 
 }

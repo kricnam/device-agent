@@ -16,6 +16,11 @@ class Modem
 public:
 	Modem();
 	virtual ~Modem();
+	void PowerOff(void);
+	void PowerOn(void);
+	bool IsPowerOff(void);
+protected:
+	bool bPowerOff;
 };
 
 }

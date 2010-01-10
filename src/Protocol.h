@@ -13,32 +13,51 @@
 #include "CommunicationCommand.h"
 #include "HistoryDataRequestCmd.h"
 #include <string>
+#include <list>
+#include <sys/time.h>
 namespace bitcomm
 {
 
 class Protocol
 {
 public:
-	Protocol(const char* szServer) {strServerName = szServer;};
+	Protocol(const char* szServer)
+	{
+		strServerName = szServer;
+		nIdleTimeSetting = 60;
+		nIntervalSetting = 600;
+	};
 	virtual ~Protocol();
 	void RequestCurrentData(Channel& port,Packet& data);
 	void SendCurrentData(Channel& port, DataPacketQueue& queue);
 	void NegoiateDataChannel(TCPPort& port);
 	void NegoiateControlChannel(TCPPort& port);
 	int Sleep();
-	void HealthCheck(Channel& dev,Channel& port,Packet& status);
+	void HealthCheck(Channel& dev,Packet& status);
+	void HealthCheckReport(Channel& port,Packet& status);
 	enum CommunicationCommand GetCommand(Channel& port,CmdPacket& cmd);
 	void TransferCmd(Channel& dev,Channel& port,CmdPacket& cmd);
 	void HistoryDataTransfer(Channel& dev,Channel& port,HistoryDataRequestCmd& cmd);
 	void SendQueueData(DataPacketQueue& queue,Channel& port);
+	bool IsTimeForSleep(void);
+	void SleepForPowerOn(void);
+	void PatrolRest(void);
 
 protected:
+
 	int negoiateChannel(TCPPort& port,int nStartPort);
+	void setReservedTime(struct timeval& timer,int sec, bool bAlign=true);
+	bool isTimeForAction(struct timeval& timer);
 	bool bExtCommunicationError;
 	bool bInCommunicationError;
 	unsigned char Machine;
 	string strServerName;
 	unsigned int nLastStatus;
+	int nIdleTimeSetting;
+	int nIntervalSetting;
+	struct timeval tmLastActive;
+	struct timeval tmHealthCheckActive;
+	struct timeval tmCurrentDataActive;
 };
 
 }
