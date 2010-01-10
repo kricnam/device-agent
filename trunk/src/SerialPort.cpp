@@ -24,28 +24,31 @@ SerialPort::SerialPort()
 
 SerialPort::~SerialPort()
 {
-	if (handle>0)
-		close(handle);
+	if (handle > 0)
+		Close();
 }
 
-void SerialPort::Open(const char* szDev)
+int SerialPort::Open(const char* szDev)
 {
-	//not reopen here
-	if (handle>0) return;
+	Close();
 
-	if (strDevName!=szDev)
+	if (strDevName != szDev)
 		strDevName = szDev;
 
 	handle = open(strDevName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-	if (handle<0)
+	if (handle < 0)
+	{
 		perror("SerialPort::Open");
+		return -1;
+	}
 	SetCom();
-	return;
+	return 0;
 }
 
 void SerialPort::SetCom(void)
 {
-	if (handle<0) return;
+	if (handle < 0)
+		return;
 
 	struct termios newtio;
 	tcflush(handle, TCIFLUSH);
@@ -56,9 +59,10 @@ void SerialPort::SetCom(void)
 	newtio.c_cflag &= ~(CSIZE | PARENB);
 	newtio.c_cflag |= B19200 | CS8 | CLOCAL | CREAD;
 
-	newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG |IEXTEN);
+	newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG | IEXTEN);
 
-	newtio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+	newtio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR
+			| ICRNL | IXON);
 
 	newtio.c_oflag &= ~OPOST;
 
@@ -67,34 +71,46 @@ void SerialPort::SetCom(void)
 	newtio.c_cc[VTIME] = 0;
 
 	int n = tcsetattr(handle, TCSANOW, &newtio);
-	if (n<0)
+	if (n < 0)
 		perror("SerialPort::SetCom");
 }
 
 void SerialPort::Lock(void)
 {
-	if (flock(handle,LOCK_EX)<0)
+	if (flock(handle, LOCK_EX) < 0)
 		perror("SerialPort::Lock");
+}
+
+void bitcomm::SerialPort::Close()
+{
+	if (handle > 0)
+	{
+		tcflush(handle, TCIOFLUSH);
+		close(handle);
+		handle = -1;
+	}
 }
 
 void SerialPort::Unlock(void)
 {
-	if (flock(handle,LOCK_UN)<0)
+	if (flock(handle, LOCK_UN) < 0)
 		perror("SerialPort::Unlock");
 }
 
-int SerialPort::Read(char* buf,int len)
+int SerialPort::Read(char* buf, int len)
 {
-	if (len==0) return 0;
-	if (handle==-1)
+	if (len == 0)
+		return 0;
+	if (handle == -1)
 		Open(strDevName.c_str());
 	int try_again = 2;
 	int n;
 	do
 	{
-		n = read(handle,buf,len);
-		if (n>0) return n;
-		if (n==-1)
+		n = read(handle, buf, len);
+		if (n > 0)
+			return n;
+		if (n == -1)
 		{
 			perror("SerialPort::Read");
 			return 0;
@@ -104,20 +120,22 @@ int SerialPort::Read(char* buf,int len)
 			usleep(timeout);
 			continue;
 		}
-	}while(false);
+	} while (false);
 	return n;
 }
 
-int SerialPort::Write(const char* buf,int len)
+int SerialPort::Write(const char* buf, int len)
 {
-	if (len==0) return 0;
-	if (handle==-1)
+	if (len == 0)
+		return 0;
+	if (handle == -1)
 		Open(strDevName.c_str());
 
-	int n = write(handle,buf,len);
+	int n = write(handle, buf, len);
 	tcdrain(handle);
-	if (n>0) return n;
-	if (n==-1)
+	if (n > 0)
+		return n;
+	if (n == -1)
 		perror("SerialPort::Write");
 	return 0;
 }

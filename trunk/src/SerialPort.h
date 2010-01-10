@@ -16,8 +16,10 @@ class SerialPort :public virtual Channel{
 public:
 	SerialPort();
 	virtual ~SerialPort();
-	void Open(const char* szDev);
+	int Open(const char* szDev);
+	void Close();
 	void SetCom(void);
+	virtual int Open(void) {return Open(strDevName.c_str());};
 	virtual int Read(char* buf,int len);
 	virtual int Write(const char* buf,int len);
 	virtual void Lock(void);

@@ -12,6 +12,7 @@ namespace bitcomm
 
 Modem::Modem()
 {
+	bPowerOff = true;
 }
 
 Modem::~Modem()

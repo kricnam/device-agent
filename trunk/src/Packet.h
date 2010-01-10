@@ -9,6 +9,7 @@
 #define PACKET_H_
 #include <string>
 #include "Channel.h"
+#include <sys/time.h>
 using namespace std;
 namespace bitcomm
 {
@@ -98,7 +99,7 @@ public:
 	unsigned short GetAckNo(void);
 	unsigned short GetAssignedPort(void);
 	unsigned int GetStatus(void);
-
+	struct timeval& GetTime(void){ return tmActionTime; }
 protected:
 	enum Symbol
 	{
@@ -117,6 +118,8 @@ protected:
 	void slipToNextStartToken(void);
 	bool isFrameCRCOK(void);
 	bool isValidFrame(void);
+
+	struct timeval tmActionTime;
 };
 }
 #endif /* PACKET_H_ */

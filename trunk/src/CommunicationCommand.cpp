@@ -9,10 +9,6 @@
 
 namespace bitcomm
 {
-
-
-
-
 CmdPacket::CmdPacket()
 {
 

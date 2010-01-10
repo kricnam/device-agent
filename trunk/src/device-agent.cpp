@@ -19,20 +19,7 @@ using namespace bitcomm;
 int main(void) {
 	//Initiate Serial Port
 	SerialPort portMP;
-
-	//Power on the EXP500,Make sure got a valid IP
 	Modem exp500;
-
-	//Negotiate DATA Channel
-	//Negotiate CONTROL Channel
-	//Get Current data
-	//Send out data
-	//Get status
-	//send out status if necessary
-	//Check CONTROL command
-	//Process command if necessary
-	//Power off EXP500 if necessary
-	//read and store data and status, until EXP500 power on
 
 	Config config("./agent.conf");
 
@@ -41,8 +28,7 @@ int main(void) {
 	ControlTask controlProcess(portMP,exp500,protocol);
 
 	dataProcess.run();
-	controlProcess.run();
+	controlProcess.doProcess(&controlProcess);
 
-	while(1) sleep(60);
 	return EXIT_SUCCESS;
 }

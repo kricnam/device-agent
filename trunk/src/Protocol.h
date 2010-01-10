@@ -48,6 +48,11 @@ protected:
 	int negoiateChannel(TCPPort& port,int nStartPort);
 	void setReservedTime(struct timeval& timer,int sec, bool bAlign=true);
 	bool isTimeForAction(struct timeval& timer);
+	void setLastActionTime(struct timeval& tm)
+	{
+		if (timercmp(&tm,&tmLastActive,>))
+				tmLastActive = tm;
+	};
 	bool bExtCommunicationError;
 	bool bInCommunicationError;
 	unsigned char Machine;

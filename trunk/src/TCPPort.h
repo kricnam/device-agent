@@ -23,8 +23,9 @@ public:
 	TCPPort();
 	virtual ~TCPPort();
 	int Open(const char* szServer,int nPort);
-	virtual int Read(char* buf,int len);
-	virtual int Write(const char* buf,int len);
+	virtual int Open() {return Open(strServerName.c_str(),nPort);};
+	virtual int Read(char* buf,int len) throw(ChannelException);
+	virtual int Write(const char* buf,int len) throw(ChannelException);
 	virtual void Lock(void);
 	virtual void Unlock(void);
 	void SetTimeOut(int n);
