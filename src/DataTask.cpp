@@ -28,7 +28,7 @@ DataTask::~DataTask()
 void DataTask::run(void)
 {
 	//Start the thread to read and send data
-	if (pidTask == (unsigned )-1) return;
+	if (pidTask != (unsigned )-1) return;
 	pthread_create(&pidTask,NULL,DataTask::doProcess,NULL);
 }
 
@@ -39,8 +39,6 @@ void* DataTask::doProcess(void* pThis)
 
 	Packet currentData;
 	DataPacketQueue dataQueue;
-
-	portServer.Open("127.0.0.1",9999);
 
 	while(1)
 	{

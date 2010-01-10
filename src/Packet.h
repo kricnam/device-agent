@@ -92,6 +92,8 @@ public:
 	void ReceiveAckFrom(Channel& port);
 	bool IsAckNo(unsigned short n);
 	bool IsValidStatus(void);
+	bool IsValidAck(void);
+	bool IsAck(void);
 	unsigned short GetDataNo(void);
 	unsigned short GetAckNo(void);
 	unsigned short GetAssignedPort(void);
