@@ -117,19 +117,31 @@ void TCPPort::Close()
 	}
 }
 
-int TCPPort::Read(char* buf,int len)
+int TCPPort::Read(char* buf,int len) throw(ChannelException)
 {
+	if (!bConnected) throw ChannelException();
 	int n = recv(socketID,buf,len,0);
 	if (n<0)
+	{
+		int err = errno;
 		perror("TCPPort::Read");
+		ChannelException excp(err);
+		throw excp;
+	}
 	return n;
 }
 
-int TCPPort::Write(const char* buf,int len)
+int TCPPort::Write(const char* buf,int len) throw(ChannelException)
 {
+	if (!bConnected) throw ChannelException();
 	int n = send(socketID,buf,len,0);
 	if (n<0)
+	{
+		int err = errno;
 		perror("TCPPort::Write");
+		ChannelException excp(err);
+		throw excp;
+	}
 	return n;
 }
 

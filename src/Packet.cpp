@@ -39,6 +39,7 @@ void Packet::buildPacket(const char* szContent,int size,unsigned char Machine)
 void Packet::SendTo(Channel& port)
 {
 	port.Write(strCache.c_str(),strCache.size());
+	gettimeofday(&tmActionTime,0);
 }
 
 void Packet::ReceiveAckFrom(Channel& port)
@@ -54,7 +55,11 @@ void Packet::ReceiveAckFrom(Channel& port)
 		//scan frame start
 		if (strCache.empty())
 		{
-			while(n && ( buff!=ACK || buff!=NAK)) {n = port.Read(&buff,1);};
+			while(n && ( buff!=ACK || buff!=NAK))
+			{
+				n = port.Read(&buff,1);
+				if (n) gettimeofday(&tmActionTime,0);
+			};
 			if (n==0) break;
 		}
 
@@ -62,6 +67,7 @@ void Packet::ReceiveAckFrom(Channel& port)
 		{
 			strCache.append(&buff,1);
 			n = port.Read(&buff,1);
+			if (n) gettimeofday(&tmActionTime,0);
 		} while(n);
 	}
 
@@ -81,8 +87,13 @@ void Packet::ReceiveFrameFrom(Channel& port)
 		//scan frame start
 		if (strCache.empty())
 		{
-			while(buff!=SOH && n) {n = port.Read(&buff,1);};
+			while(buff!=SOH && n)
+			{
+				n = port.Read(&buff,1);
+				if (n) gettimeofday(&tmActionTime,0);
+			};
 			if (n==0) break;
+
 		}
 
 		do
@@ -90,6 +101,7 @@ void Packet::ReceiveFrameFrom(Channel& port)
 			strCache.append(&buff,1);
 			if (buff==EOT && isValidFrame()) return;
 			n = port.Read(&buff,1);
+			if (n) gettimeofday(&tmActionTime,0);
 		} while(n);
 	}
 	while(n);

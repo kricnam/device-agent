@@ -10,6 +10,8 @@
 #include "MPHealthCheckCmdPacket.h"
 #include <unistd.h>
 #include <sys/time.h>
+#include <typeinfo>
+
 namespace bitcomm
 {
 
@@ -117,6 +119,8 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 		CmdPacket cmd;
 		port.SetTimeOut(5000000);
 		cmd.ReceiveFrameFrom(port);
+		setLastActionTime(cmd.GetTime());
+
 		if (cmd.GetSize() == 0)
 		{
 			retry_data++;
@@ -140,11 +144,15 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 {
 	if (!isTimeForAction(tmCurrentDataActive)) return;
 	setReservedTime(tmCurrentDataActive,10*60);
+
 	port.Lock();
 	CmdPacket request;
 	request.SetCommand(cmdWord[DataRequest], Machine);
 	request.SendTo(port);
+	setLastActionTime(request.GetTime());
+
 	data.ReceiveFrameFrom(port);
+	setLastActionTime(data.GetTime());
 	port.Unlock();
 	return;
 }
@@ -156,8 +164,10 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 	{
 		Packet& packet = queue.Front();
 		port.Write(packet.GetData(), sizeof(struct Packet::DataPacketFrame));
+		setLastActionTime(packet.GetTime());
 		Packet ack;
 		ack.ReceiveAckFrom(port);
+		setLastActionTime(ack.GetTime());
 		if (ack.IsAckNo(packet.GetDataNo()))
 		{
 			queue.Pop();
@@ -181,8 +191,10 @@ void Protocol::HealthCheck(Channel& dev, Packet& status)
 	setReservedTime(tmHealthCheckActive,30);
 	MPHealthCheckCmdPacket cmd(nLastStatus, Machine);
 	cmd.SendTo(dev);
+	setLastActionTime(cmd.GetTime());
 	Packet statusAnswer;
 	statusAnswer.ReceiveFrameFrom(dev);
+	setLastActionTime(statusAnswer.GetTime());
 }
 
 void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
@@ -194,15 +206,38 @@ void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
 		{
 			nLastStatus = nNewStatus;
 			statusAnswer.SendTo(port);
+			setLastActionTime(statusAnswer.GetTime());
 			Packet ack;
 			ack.ReceiveAckFrom(port);
+			setLastActionTime(ack.GetTime());
 		}
 	}
 }
 
 enum CommunicationCommand Protocol::GetCommand(Channel& port, CmdPacket& cmd)
 {
-	cmd.ReceiveFrameFrom(port);
+	do
+	{
+		try
+		{
+			cmd.ReceiveFrameFrom(port);
+			setLastActionTime(cmd.GetTime());
+		}
+		catch (ChannelException& e)
+		{
+			if (e.bUnConnected)
+			{
+				if (typeid(port) == typeid(TCPPort))
+				{
+					NegoiateControlChannel(dynamic_cast<TCPPort&>(port));
+				}
+				else
+					port.Open();
+				continue;
+			}
+		}
+	} while (false);
+
 	return cmd.CommandType();
 }
 
@@ -210,10 +245,12 @@ void Protocol::TransferCmd(Channel& dev, Channel& port, CmdPacket& cmd)
 {
 	dev.Lock();
 	cmd.SendTo(dev);
+	setLastActionTime(cmd.GetTime());
 	Packet answer;
 	answer.ReceiveFrameFrom(dev);
 	dev.Unlock();
 	answer.SendTo(port);
+	setLastActionTime(answer.GetTime());
 }
 
 void Protocol::HistoryDataTransfer(Channel& dev, Channel& port,
@@ -250,10 +287,12 @@ void Protocol::SendQueueData(DataPacketQueue& queue, Channel& port)
 		for (int i = 0; i < queue.GetSize(); i++)
 		{
 			queue.GetAt(i).SendTo(port);
+			setLastActionTime(queue.GetAt(i).GetTime());
 		}
 		Packet ack;
 
 		ack.ReceiveAckFrom(port);
+		setLastActionTime(ack.GetTime());
 
 		if (ack.IsValidAck() && ack.IsAck())
 		{
