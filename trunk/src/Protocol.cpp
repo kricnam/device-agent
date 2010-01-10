@@ -10,11 +10,6 @@
 #include "MPHealthCheckCmdPacket.h"
 namespace bitcomm
 {
-Protocol::Protocol()
-{
-
-}
-
 Protocol::~Protocol()
 {
 
@@ -217,13 +212,13 @@ void Protocol::SendQueueData(DataPacketQueue& queue,Channel& port)
 			queue.GetAt(i).SendTo(port);
 		}
 		Packet ack;
+
 		ack.ReceiveAckFrom(port);
-		//TODO:
-		//if (ack.IsValid() && ack.IsAck())
+
+		if (ack.IsValidAck() && ack.IsAck())
 		{
 			int ackNo =  ack.GetAckNo();
-			while(queue.GetSize()&&
-					ackNo >= queue.Front().GetDataNo())
+			while(queue.GetSize()&&	ackNo >= queue.Front().GetDataNo())
 				queue.Pop();
 		}
 	}while(queue.GetSize());

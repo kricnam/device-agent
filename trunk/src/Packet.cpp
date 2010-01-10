@@ -48,6 +48,7 @@ void Packet::ReceiveAckFrom(Channel& port)
 	int n = port.Read(&buff,1);
 
 	if (n==0) return;
+
 	do
 	{
 		//scan frame start
@@ -63,6 +64,7 @@ void Packet::ReceiveAckFrom(Channel& port)
 			n = port.Read(&buff,1);
 		} while(n);
 	}
+
 	while(n);
 }
 
@@ -189,6 +191,17 @@ unsigned short Packet::GetAckNo(void)
 	if (strCache.size()==4) return 0;
 	struct AcKFrame* p = (struct AcKFrame*)GetData();
 	return p->dataNumber;
+}
+
+bool Packet::IsValidAck(void)
+{
+	return (!strCache.empty()) &&
+			(strCache[0]==ACK || strCache[0]==NAK);
+}
+
+bool Packet::IsAck(void)
+{
+	return 	strCache[0]==ACK;
 }
 
 }//name space end

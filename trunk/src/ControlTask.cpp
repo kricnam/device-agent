@@ -30,7 +30,7 @@ void ControlTask::run(void)
 
 void* ControlTask::doProcess(void* pThis)
 {
-	Protocol protocol;
+	//Protocol protocol;
 	//TCPPort portServer;
 
 	while(true)

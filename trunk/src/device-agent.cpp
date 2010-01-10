@@ -13,7 +13,7 @@
 #include "ControlTask.h"
 #include "SerialPort.h"
 #include "Modem.h"
-
+#include "Config.h"
 using namespace bitcomm;
 
 int main(void) {
@@ -34,7 +34,9 @@ int main(void) {
 	//Power off EXP500 if necessary
 	//read and store data and status, until EXP500 power on
 
-	Protocol protocol;
+	Config config("./agent.conf");
+
+	Protocol protocol(config.GetServerName().c_str());
 	DataTask  dataProcess(protocol,portMP,exp500);
 	ControlTask controlProcess(portMP,exp500,protocol);
 

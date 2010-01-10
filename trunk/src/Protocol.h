@@ -19,7 +19,7 @@ namespace bitcomm
 class Protocol
 {
 public:
-	Protocol();
+	Protocol(const char* szServer) {strServerName = szServer;};
 	virtual ~Protocol();
 	void RequestCurrentData(Channel& port,Packet& data);
 	void SendCurrentData(Channel& port, DataPacketQueue& queue);
@@ -31,6 +31,7 @@ public:
 	void TransferCmd(Channel& dev,Channel& port,CmdPacket& cmd);
 	void HistoryDataTransfer(Channel& dev,Channel& port,HistoryDataRequestCmd& cmd);
 	void SendQueueData(DataPacketQueue& queue,Channel& port);
+
 protected:
 	int negoiateChannel(TCPPort& port,int nStartPort);
 	bool bExtCommunicationError;

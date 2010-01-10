@@ -7,6 +7,7 @@ CPP_SRCS += \
 ../src/CRC16.cpp \
 ../src/Channel.cpp \
 ../src/CommunicationCommand.cpp \
+../src/Config.cpp \
 ../src/ControlTask.cpp \
 ../src/DataTask.cpp \
 ../src/HistoryDataRequestCmd.cpp \
@@ -23,6 +24,7 @@ OBJS += \
 ./src/CRC16.o \
 ./src/Channel.o \
 ./src/CommunicationCommand.o \
+./src/Config.o \
 ./src/ControlTask.o \
 ./src/DataTask.o \
 ./src/HistoryDataRequestCmd.o \
@@ -39,6 +41,7 @@ CPP_DEPS += \
 ./src/CRC16.d \
 ./src/Channel.d \
 ./src/CommunicationCommand.d \
+./src/Config.d \
 ./src/ControlTask.d \
 ./src/DataTask.d \
 ./src/HistoryDataRequestCmd.d \
