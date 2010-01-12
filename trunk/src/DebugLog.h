@@ -13,7 +13,7 @@
 // Example:
 // ...
 // TraceLogInit("TEST","127.0.0.1",1234); //output to localhost:1234
-// SETTRACELEVEL(1);       //Only level lower or equal than 1 is out
+// SETTRACELEVEL(1);       //Only level higher equal than 1 is out
 //...
 //
 // TRACE(0,"This is a test message"); //output level 0 message
@@ -46,6 +46,17 @@ struct Location
 	const char* szFunc;
 	const char* szLine;
 };
+#define LP_NONE           0
+#define LP_TRACE          1
+#define LP_DEBUG          2
+#define LP_INFO           3
+#define LP_NOTICE         4
+#define LP_WARNING	 	  5
+#define LP_ERROR          6
+#define LP_CRITICAL       7
+#define LP_ALERT          8
+#define LP_EMERGENCY      9
+#define LP_UNINITIALIZED  -1
 
 class TraceLog
 {
@@ -56,10 +67,9 @@ public:
 	TraceLog(const char* szT,const char* szIP,int nPort);
 	~TraceLog();
 
-	void Trace(int nLevel, const char* szFmt,...);
-
+	void Trace(int nLevel, const char* szFile, const char* szFunc,int nLine, const char* szFmt,...);
 	static void Init(const char* Title,const char* szIP, int nPort);
-	static inline bool IsInit() {return  sct!=-1;}
+
 	static inline void SetLocalOut(bool bEnable) {bLocal = bEnable;}
 	static void SetTraceLevel(int n) { nLevel = n;}
 protected:
@@ -78,11 +88,12 @@ protected:
 	static int nCounter;
 };
 
+extern TraceLog gTraceLog;
 }
 
 
 #define TraceLogInit(x,y,z)	gTraceLog.Init(x,y,z)
-#define TRACE 			gTraceLog.Trace
+#define TRACE(args...) 		gTraceLog.Trace(LP_TRACE,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
 #define SETLOCALOUT(x)		gTraceLog.SetLocalOut(x)
 #define SETTRACELEVEL(x)	gTraceLog.SetTraceLevel(x)
 #define ERRTRACE(x)	{char szErrorTraceStrBuffer[128];\

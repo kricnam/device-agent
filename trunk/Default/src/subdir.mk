@@ -10,6 +10,7 @@ CPP_SRCS += \
 ../src/Config.cpp \
 ../src/ControlTask.cpp \
 ../src/DataTask.cpp \
+../src/DebugLog.cpp \
 ../src/HistoryDataRequestCmd.cpp \
 ../src/MPHealthCheckCmdPacket.cpp \
 ../src/Modem.cpp \
@@ -27,6 +28,7 @@ OBJS += \
 ./src/Config.o \
 ./src/ControlTask.o \
 ./src/DataTask.o \
+./src/DebugLog.o \
 ./src/HistoryDataRequestCmd.o \
 ./src/MPHealthCheckCmdPacket.o \
 ./src/Modem.o \
@@ -44,6 +46,7 @@ CPP_DEPS += \
 ./src/Config.d \
 ./src/ControlTask.d \
 ./src/DataTask.d \
+./src/DebugLog.d \
 ./src/HistoryDataRequestCmd.d \
 ./src/MPHealthCheckCmdPacket.d \
 ./src/Modem.d \
