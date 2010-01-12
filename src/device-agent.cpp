@@ -14,10 +14,12 @@
 #include "SerialPort.h"
 #include "Modem.h"
 #include "Config.h"
+#include "DebugLog.h"
 using namespace bitcomm;
 
 int main(void) {
 	//Initiate Serial Port
+	TRACE("Init Serial port");
 	SerialPort portMP;
 	Modem exp500;
 

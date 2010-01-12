@@ -18,6 +18,7 @@
 
 namespace bitcomm
 {
+
 TraceLog gTraceLog;
 
 static const string priorityNames[] =
@@ -78,7 +79,7 @@ void  TraceLog::Init(const char* Title, const char* szIP, int nPort)
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(nLogPort);
 	sin.sin_addr.s_addr = inet_addr(szLogIP);
-	TRACE(0, "[%s] Log to %s:%d", Title, szLogIP, nLogPort);
+
 }
 
 void TraceLog::SetTitle(char* Buf, int nSize)
@@ -93,7 +94,12 @@ void TraceLog::SetTitle(char* Buf, int nSize)
 	gettimeofday(&tv, &tz);
 
 	localtime_r(&tv.tv_sec, &Time);
-	snprintf(Buf, nSize, "\n%02d-%02d %02d:%02d:%02d.%03d %s %04d ",
+	if (bLocal)
+		snprintf(Buf, nSize, "\n%02d-%02d %02d:%02d:%02d.%03d %s ",
+					Time.tm_mon + 1, Time.tm_mday, Time.tm_hour, Time.tm_min,
+					Time.tm_sec, (int)tv.tv_usec / 1000, strTitle.c_str());
+	else
+		snprintf(Buf, nSize, "\n%02d-%02d %02d:%02d:%02d.%03d %s %04d ",
 			Time.tm_mon + 1, Time.tm_mday, Time.tm_hour, Time.tm_min,
 			Time.tm_sec, (int)tv.tv_usec / 1000, strTitle.c_str(), nCounter);
 	nCounter = (nCounter > 9998) ? 0 : nCounter + 1;
@@ -109,6 +115,7 @@ void TraceLog::SendOut(const char* szBuf)
 			perror("TraceLog::SendOut:puts");
 			clearerr(stdout);
 		}
+		return;
 	}
 	if (sct < 0 && !bLocal)
 	{
@@ -131,16 +138,9 @@ void TraceLog::SendOut(const char* szBuf)
 	}
 }
 
-void TraceLog::Trace(int nLev, const char* szFmt, ...)
+void TraceLog::Trace(int nLev, const char* szFile, const char* szFunc ,int nLine, const char* szFmt, ...)
 {
-	if (!IsInit())
-	{
-		fputs("TraceLog Object not initiated.\n"
-			"Please call TraceLogInit(Title,IP,Port) to initiate first.\n"
-			"look tracelog.h for further reference.", stderr);
-		exit(1);
-	}
-	if (nLev > nLevel)
+	if (nLev <= nLevel)
 		return;
 	va_list ap;
 	int n;
@@ -156,6 +156,11 @@ void TraceLog::Trace(int nLev, const char* szFmt, ...)
 
 	SetTitle(pBuf, size);
 	int used = strlen(pBuf);
+	if (used < size)
+	{
+		snprintf(pBuf+used, size-used, "%s:%s:%u ",szFile,szFunc,nLine);
+		used = strlen(pBuf);
+	}
 	while (1)
 	{
 		/* Try to print in the allocated space. */
