@@ -9,6 +9,7 @@
 #include "Modem.h"
 #include "Protocol.h"
 #include "TCPPort.h"
+#include "DebugLog.h"
 
 namespace bitcomm
 {
@@ -37,7 +38,11 @@ void* ControlTask::doProcess(void* pThis)
 
 	while(true)
 	{
-		if (task.modem.IsPowerOff()) task.modem.PowerOn();
+		if (task.modem.IsPowerOff())
+		{
+			INFO("Power On Modem");
+			task.modem.PowerOn();
+		}
 		eCmd = task.protocol.GetCommand(port,cmd);
 		switch(eCmd)
 		{
@@ -89,6 +94,7 @@ void* ControlTask::doProcess(void* pThis)
 			//TODO:send ACK frame;
 			break;
 		case CMD_END:
+			TRACE("Got no command");
 			if (task.protocol.IsTimeForSleep())
 			{
 				//Modem Power off

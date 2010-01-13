@@ -5,9 +5,11 @@
  *      Author: mxx
  */
 #include "CommunicationCommand.h"
+#include "DebugLog.h"
 #include "Packet.h"
 #include "CRC16.h"
 #include <string>
+#include <typeinfo>
 using namespace std;
 namespace bitcomm
 {
@@ -79,6 +81,7 @@ void Packet::ReceiveAckFrom(Channel & port)
 
 void Packet::ReceiveFrameFrom(Channel & port)
 {
+	TRACE("Receive from %s",typeid(port).name());
 	strCache.clear();
 	char buff;
 	int n = port.Read(&buff, 1);

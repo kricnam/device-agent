@@ -6,7 +6,7 @@
  */
 
 #include "Modem.h"
-
+#include "DebugLog.h"
 namespace bitcomm
 {
 
@@ -31,6 +31,7 @@ bool Modem::IsPowerOff(void)
 
 void Modem::PowerOff(void)
 {
+	INFO("Power off");
 	bPowerOff = true;
 }
 
