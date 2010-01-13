@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <sys/file.h>
-
+#include "DebugLog.h"
 #include "TCPPort.h"
 using namespace std;
 namespace bitcomm
@@ -30,13 +30,15 @@ TCPPort::~TCPPort()
 
 int TCPPort::Open(const char* szServer,int nPort)
 {
+	TRACE("%s:%d",szServer,nPort);
 	if (strServerName!=szServer)
 		strServerName = szServer;
 
 	this->nPort = nPort;
 
-	if (socketID < 0)
-	{
+	if (socketID > 0)	Close();
+
+
 		socketID = socket(AF_INET,SOCK_STREAM,0);
 		if (socketID<0)
 		{
@@ -44,7 +46,7 @@ int TCPPort::Open(const char* szServer,int nPort)
 			return -1;
 		}
 		SetTimeOut(timeout);
-	}
+
 	return Connect();
 }
 
@@ -66,7 +68,7 @@ int TCPPort::Connect()
     		&hints, &result);
     if (s != 0)
     {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+        ERROR("%s\n", gai_strerror(s));
         return -1;
     }
 
@@ -85,25 +87,27 @@ int TCPPort::Connect()
 
         if (socketID == -1)
             continue;
-
+        struct sockaddr_in* pin = (struct sockaddr_in*)rp->ai_addr;
+        TRACE("Connect to %s:%d",inet_ntoa(pin->sin_addr),ntohs(pin->sin_port));
         if (::connect(socketID, rp->ai_addr, rp->ai_addrlen) != -1)
         {
         	bConnected = true;
             break;                  /* Success */
         }
-
+        ERRTRACE();
         close(socketID);
         socketID = -1;
     }
 
     if (rp == NULL)
     {               /* No address succeeded */
-        fprintf(stderr, "Could not connect\n");
+        ERROR("No address succeeded");
         return -1;
     }
 
     freeaddrinfo(result);           /* No longer needed */
-    return -1;
+    if (!bConnected) return -1;
+    return 0;
 }
 
 void TCPPort::Close()
@@ -119,12 +123,14 @@ void TCPPort::Close()
 
 int TCPPort::Read(char* buf,int len) throw(ChannelException)
 {
+	TRACE("Reading...");
 	if (!bConnected) throw ChannelException();
 	int n = recv(socketID,buf,len,0);
+	TRACE("Read %d byte",n);
 	if (n<0)
 	{
 		int err = errno;
-		perror("TCPPort::Read");
+		ERRTRACE()
 		ChannelException excp(err);
 		throw excp;
 	}

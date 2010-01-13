@@ -21,7 +21,7 @@ namespace bitcomm
 
 TraceLog gTraceLog;
 
-static const string priorityNames[] =
+const string TraceLog::priorityNames[] =
 	{ "Zero Priority", "TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR",
 			"CRITICAL ERROR", "ALERT", "EMERGENCY" };
 
@@ -158,7 +158,7 @@ void TraceLog::Trace(int nLev, const char* szFile, const char* szFunc ,int nLine
 	int used = strlen(pBuf);
 	if (used < size)
 	{
-		snprintf(pBuf+used, size-used, "%s:%s:%u ",szFile,szFunc,nLine);
+		snprintf(pBuf+used, size-used, "%s %s:%u[%s]\t",priorityNames[nLev].c_str(),szFile,nLine,szFunc);
 		used = strlen(pBuf);
 	}
 	while (1)

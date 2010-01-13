@@ -8,6 +8,7 @@
 #include "Protocol.h"
 #include "PacketQueue.h"
 #include "MPHealthCheckCmdPacket.h"
+#include "DebugLog.h"
 #include <unistd.h>
 #include <sys/time.h>
 #include <typeinfo>
@@ -48,7 +49,9 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 {
 	int retry = 3;
 	int retry_connect = 2;
+
 	int nPort = negoiateChannel(port, 50101);
+	TRACE("Get Port %d",nPort);
 	while (nPort && retry_connect--)
 	{
 		while (retry--)
@@ -73,7 +76,8 @@ bool Protocol::IsTimeForSleep(void)
 	struct timeval tmDiff;
 	gettimeofday(&tmNow, 0);
 	timersub(&tmNow,&tmLastActive,&tmDiff);
-	return (tmDiff.tv_sec > nIdleTimeSetting);
+	INFO("idle time %d",tmDiff.tv_sec);
+	return ((unsigned )tmDiff.tv_sec > nIdleTimeSetting);
 }
 
 void Protocol::PatrolRest(void)
@@ -83,11 +87,13 @@ void Protocol::PatrolRest(void)
 
 void Protocol::SleepForPowerOn(void)
 {
+
 	struct timeval tmNow, tmWake, tmSleep;
 	gettimeofday(&tmNow, 0);
 	tmWake.tv_sec = ((tmNow.tv_sec / nIntervalSetting) + 1) * nIntervalSetting;
 	tmWake.tv_usec = 0;
 	timersub(&tmWake,&tmNow,&tmSleep);
+	TRACE("Sleep %d sec",tmSleep.tv_sec);
 	usleep(tmSleep.tv_sec * 1000000 + tmSleep.tv_usec);
 }
 
@@ -99,29 +105,52 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 
 	do
 	{
+		TRACE("port=%d",start_port);
 		if (port.Open(strServerName.c_str(), start_port) < 0)
 		{
 			retry++;
+			TRACE("Retry %d",retry);
 			if (retry == 12)
 				break;
 			if (retry % 3 == 0)
-				start_port++;
+			{
+				if (start_port == nStartPort)
+					start_port++;
+				else
+					start_port = nStartPort;
+			}
 			if (retry % 6 == 0)
 			{
+				TRACE("Waiting 30s");
 				sleep(30);
-				start_port = nStartPort;
+				if (start_port == nStartPort)
+					start_port++;
+				else
+					start_port = nStartPort;
 			}
 			else
+			{
+				TRACE("Waiting 5s");
 				sleep(5);
+			}
+			TRACE("retry next time");
 			continue;
+		};
+
+		INFO("port opened, waiting command...");
+		CmdPacket cmd;
+		port.SetTimeOut(5000000);
+		try
+		{
+			cmd.ReceiveFrameFrom(port);
+			setLastActionTime(cmd.GetTime());
+		}
+		catch(ChannelException& e)
+		{
+			ERROR(e.what());
 		}
 
 		retry = 0;
-		CmdPacket cmd;
-		port.SetTimeOut(5000000);
-		cmd.ReceiveFrameFrom(port);
-		setLastActionTime(cmd.GetTime());
-
 		if (cmd.GetSize() == 0)
 		{
 			retry_data++;
@@ -137,7 +166,7 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 		port.Close();
 		return cmd.GetAssignedPort();
 
-	} while (false);
+	} while (true);
 	return 0;
 }
 
@@ -246,10 +275,12 @@ enum CommunicationCommand Protocol::GetCommand(Channel& port, CmdPacket& cmd)
 	{
 		try
 		{
+			INFO("Waiting Command from control channel");
 			cmd.ReceiveFrameFrom(port);
 			setLastActionTime(cmd.GetTime());
 		} catch (ChannelException& e)
 		{
+			TRACE("Exception:%s",e.what());
 			if (e.bUnConnected)
 			{
 				if (typeid(port) == typeid(TCPPort))

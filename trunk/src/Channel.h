@@ -21,7 +21,7 @@ public:
 	ChannelException(int errNo) {err=errNo;bUnConnected=false;};
 	virtual ~ChannelException() throw(){};
 	virtual const char* what()
-			{ return strerror_r(err,cache,128);};
+			{ return (bUnConnected)?"UnConnected":strerror_r(err,cache,128);};
 
 	int err;
 	bool bUnConnected;

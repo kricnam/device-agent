@@ -37,6 +37,7 @@
 #include <errno.h>
 #include <string.h>
 #include <string>
+
 using namespace std;
 namespace bitcomm
 {
@@ -46,6 +47,7 @@ struct Location
 	const char* szFunc;
 	const char* szLine;
 };
+
 #define LP_NONE           0
 #define LP_TRACE          1
 #define LP_DEBUG          2
@@ -82,7 +84,7 @@ protected:
 	static string strTitle;
 	static char szLogIP[50];
 
-	static string priorityNames[];
+	static const string priorityNames[];
 	static int nLevel;
 	static bool bLocal;
 	static int nCounter;
@@ -93,12 +95,21 @@ extern TraceLog gTraceLog;
 
 
 #define TraceLogInit(x,y,z)	gTraceLog.Init(x,y,z)
+
 #define TRACE(args...) 		gTraceLog.Trace(LP_TRACE,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+#define DEBUG(args...) 		gTraceLog.Trace(LP_DEBUG,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+#define INFO(args...) 		gTraceLog.Trace(LP_INFO,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+#define NOTICE(args...) 	gTraceLog.Trace(LP_NOTICE,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+#define WARNING(args...)	gTraceLog.Trace(LP_WARNING,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+#define ERROR(args...) 		gTraceLog.Trace(LP_ERROR,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+#define CRITICAL(args...)	gTraceLog.Trace(LP_CRITICAL,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+#define ALERT(args...) 		gTraceLog.Trace(LP_ALERT,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+#define EMERGENCY(args...) 	gTraceLog.Trace(LP_EMERGENCY,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
+
 #define SETLOCALOUT(x)		gTraceLog.SetLocalOut(x)
 #define SETTRACELEVEL(x)	gTraceLog.SetTraceLevel(x)
-#define ERRTRACE(x)	{char szErrorTraceStrBuffer[128];\
-				strerror_r(errno,szErrorTraceStrBuffer,128);\
-				gTraceLog.Trace(0,#x":%s",szErrorTraceStrBuffer);}
+//TODO: make it thread safe
+#define ERRTRACE()	{gTraceLog.Trace(LP_ERROR,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,strerror(errno));}
 
 
 #endif /* DEBUGLOG_H_ */
