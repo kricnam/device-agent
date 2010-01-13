@@ -77,7 +77,7 @@ bool Protocol::IsTimeForSleep(void)
 	gettimeofday(&tmNow, 0);
 	timersub(&tmNow,&tmLastActive,&tmDiff);
 	INFO("idle time %d",tmDiff.tv_sec);
-	return ((unsigned )tmDiff.tv_sec > nIdleTimeSetting);
+	return ((unsigned )tmDiff.tv_sec > (unsigned) nIdleTimeSetting);
 }
 
 void Protocol::PatrolRest(void)
@@ -147,7 +147,7 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 		}
 		catch(ChannelException& e)
 		{
-			ERROR(e.what());
+			TRACE("exception %s",e.what());
 		}
 
 		retry = 0;
