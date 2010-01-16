@@ -14,7 +14,7 @@
 namespace bitcomm
 {
 
-ControlTask::ControlTask(SerialPort& port,Modem& m,Protocol& p):portMP(port),modem(m),protocol(p)
+ControlTask::ControlTask(Protocol& p,Modem& m):protocol(p),modem(m)
 {
 
 }
@@ -32,7 +32,8 @@ void ControlTask::run(void)
 void* ControlTask::doProcess(void* pThis)
 {
 	ControlTask& task = *(ControlTask*)pThis;
-	TCPPort port;
+	TCPPort& port = task.protocol.GetControlPort();
+	SerialPort& portMP = task.protocol.GetMPPort();
 	CmdPacket cmd;
 	enum CommunicationCommand eCmd;
 
@@ -61,7 +62,7 @@ void* ControlTask::doProcess(void* pThis)
 		case RequestDoseRateAlarm:
 		case Request40KAction:
 		case RequestGPS:
-			task.protocol.TransferCmd(task.portMP,port,cmd);
+			task.protocol.TransferCmd(portMP,port,cmd);
 			break;
 		case GetNetworkSetting:
 			break;
@@ -73,7 +74,7 @@ void* ControlTask::doProcess(void* pThis)
 			break;
 		case SetTime:
 			//TODO:SetLocalTime();
-			task.protocol.TransferCmd(task.portMP,port,cmd);
+			task.protocol.TransferCmd(portMP,port,cmd);
 			break;
 		case ConfirmDoseRate:
 		case ConfirmSpectrum:
@@ -82,7 +83,7 @@ void* ControlTask::doProcess(void* pThis)
 		case ConfirmGPS:
 		{
 			HistoryDataRequestCmd hcmd(cmd);
-			task.protocol.HistoryDataTransfer(task.portMP,port,hcmd);
+			task.protocol.HistoryDataTransfer(portMP,port,hcmd);
 			break;
 		}
 		case RequestDataCancel:

@@ -10,6 +10,7 @@
 #include "CRC16.h"
 #include <string>
 #include <typeinfo>
+#include <stdio.h>
 using namespace std;
 namespace bitcomm
 {
@@ -23,7 +24,7 @@ Packet::~Packet()
 
 }
 
-void Packet::buildPacket(const char* szContent, int size, unsigned char Machine)
+void Packet::BuildPacket(const char* szContent, int size, unsigned char Machine)
 {
 	strCache.clear();
 	strCache += SOH;
@@ -41,7 +42,6 @@ void Packet::buildPacket(const char* szContent, int size, unsigned char Machine)
 void Packet::SendTo(Channel & port)
 {
 	port.Write(strCache.c_str(), strCache.size());
-	gettimeofday(&tmActionTime, 0);
 }
 
 void Packet::ReceiveAckFrom(Channel & port)
@@ -60,9 +60,6 @@ void Packet::ReceiveAckFrom(Channel & port)
 			while (n && (buff != ACK || buff != NAK))
 			{
 				n = port.Read(&buff, 1);
-				if (n)
-					gettimeofday(&tmActionTime, 0);
-
 			};
 			if (n == 0)
 				break;
@@ -72,9 +69,6 @@ void Packet::ReceiveAckFrom(Channel & port)
 		{
 			strCache.append(&buff, 1);
 			n = port.Read(&buff, 1);
-			if (n)
-				gettimeofday(&tmActionTime, 0);
-
 		} while (n);
 	} while (n);
 }
@@ -96,12 +90,11 @@ void Packet::ReceiveFrameFrom(Channel & port)
 			while (buff != SOH && n)
 			{
 				n = port.Read(&buff, 1);
-				if (n)
-					gettimeofday(&tmActionTime, 0);
-
 			};
 			if (n == 0)
+			{
 				break;
+			}
 
 		}
 		do
@@ -109,20 +102,31 @@ void Packet::ReceiveFrameFrom(Channel & port)
 			strCache.append(&buff, 1);
 			if (buff == EOT && isValidFrame())
 				return;
-
 			n = port.Read(&buff, 1);
-			if (n)
-				gettimeofday(&tmActionTime, 0);
 
 		} while (n);
 	} while (n);
+	TRACE("Data reach end");
+	Dump();
 	while (!strCache.empty())
 	{
 		slipToNextStartToken();
 		if (isFrameCRCOK())
 			return;
-
 	}
+}
+
+void Packet::Dump()
+{
+	char buf[1024]={0};
+	int n=0;
+	for(unsigned int i=0;i < strCache.size();i++)
+	{
+		sprintf(buf+n,"%02hhX ",strCache[i]);
+		n = strlen(buf);
+		if (n>1000) break;
+	}
+	DEBUG(buf);
 }
 
 void Packet::Ack(bool bAck, enum CommunicationCommand eCmd, short nNum)
@@ -145,7 +149,7 @@ bool Packet::isValidFrame(void)
 	{
 		if (isFrameCRCOK())
 			return true;
-
+		TRACE("CRC fail");
 		if (strCache.size() > 4056)
 		{
 			slipToNextStartToken();

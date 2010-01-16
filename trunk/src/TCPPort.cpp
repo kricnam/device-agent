@@ -130,10 +130,19 @@ int TCPPort::Read(char* buf,int len) throw(ChannelException)
 	if (n<0)
 	{
 		int err = errno;
-		ERRTRACE()
-		ChannelException excp(err);
-		throw excp;
+		if (err == EAGAIN || err == EWOULDBLOCK)
+		{
+			INFO("No more date");
+			return 0;
+		}
+		else
+		{
+			ERRTRACE();
+			ChannelException excp(err);
+			throw excp;
+		}
 	}
+	gettimeofday(&tmLastAction, 0);
 	return n;
 }
 
@@ -148,6 +157,7 @@ int TCPPort::Write(const char* buf,int len) throw(ChannelException)
 		ChannelException excp(err);
 		throw excp;
 	}
+	gettimeofday(&tmLastAction, 0);
 	return n;
 }
 

@@ -11,6 +11,7 @@ using namespace std;
 #include <exception>
 #include <string>
 #include <errno.h>
+#include <sys/time.h>
 #include <string.h>
 namespace bitcomm
 {
@@ -38,6 +39,9 @@ public:
 	virtual int Write(const char* buff,int len)=0;
 	virtual void Lock()=0;
 	virtual void Unlock()=0;
+	struct timeval & GetActiveTime(){ return tmLastAction;}
+protected:
+	struct timeval tmLastAction;
 };
 }
 

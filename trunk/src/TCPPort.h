@@ -29,6 +29,7 @@ public:
 	virtual void Lock(void);
 	virtual void Unlock(void);
 	void SetTimeOut(int n);
+	void Bind(int socket){socketID = socket;};
 	void SetRemoteHost(const char* szHost)
 	{
 		strServerName = szHost;
@@ -47,6 +48,7 @@ protected:
 	int socketID;
 	bool bConnected;
 	int timeout;
+
 };
 }
 #endif /* TCPPORT_H_ */
