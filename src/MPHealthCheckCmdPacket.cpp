@@ -17,7 +17,7 @@ MPHealthCheckCmdPacket::MPHealthCheckCmdPacket(unsigned int nStatus,unsigned cha
 	content.cmd[2]=cmdWord[MPHealthCheck][1];
 	content.length = 9;
 	content.nStatus = nStatus;
-	buildPacket((const char*)&content,sizeof(content),Machine);
+	BuildPacket((const char*)&content,sizeof(content),Machine);
 }
 
 MPHealthCheckCmdPacket::~MPHealthCheckCmdPacket()

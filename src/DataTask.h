@@ -19,7 +19,7 @@ namespace bitcomm
 class DataTask
 {
 public:
-	DataTask(Protocol& p,SerialPort& port,Modem& m);
+	DataTask(Protocol& p,Modem& modem);
 	virtual ~DataTask();
 	void run(void);
 	static void* doProcess(void* pThis);
@@ -27,10 +27,7 @@ public:
 	Protocol& protocol;
 
 protected:
-
-	SerialPort& portMP;
 	Modem& modem;
-
 	pthread_t pidTask;
 	string strServer;
 };

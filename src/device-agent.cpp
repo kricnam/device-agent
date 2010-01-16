@@ -20,15 +20,15 @@ using namespace bitcomm;
 int main(void) {
 	//Initiate Serial Port
 	TRACE("Init Serial port");
-	SerialPort portMP;
+
 	Modem exp500;
 
 	Config config("./agent.conf");
 
 	Protocol protocol(config.GetServerName().c_str());
-	protocol.setMachine(config.GetMachine());
-	DataTask  dataProcess(protocol,portMP,exp500);
-	ControlTask controlProcess(portMP,exp500,protocol);
+	protocol.SetMachine(config.GetMachine());
+	DataTask  dataProcess(protocol,exp500);
+	ControlTask controlProcess(protocol,exp500);
 
 	dataProcess.run();
 	controlProcess.doProcess(&controlProcess);

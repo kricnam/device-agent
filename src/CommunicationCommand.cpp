@@ -21,7 +21,7 @@ CmdPacket::~CmdPacket()
 
 void CmdPacket::SetCommand(const char* szCmd,unsigned char Machine)
 {
-	buildPacket(szCmd,2,Machine);
+	BuildPacket(szCmd,2,Machine);
 }
 
 enum CommunicationCommand CmdPacket::CommandType()

@@ -124,8 +124,8 @@ public:
 
 	const char* GetData() {return strCache.data();};
 	int GetSize() 	{return strCache.size();};
-
-	void buildPacket(const char* szContent,int size,unsigned char Machine);
+	void Dump();
+	void BuildPacket(const char* szContent,int size,unsigned char Machine);
 	void SendTo(Channel& port);
 	void ReceiveFrameFrom(Channel& port);
 	void ReceiveAckFrom(Channel& port);
@@ -138,7 +138,7 @@ public:
 	unsigned short GetAckNo(void);
 	unsigned short GetAssignedPort(void);
 	unsigned int GetStatus(void);
-	struct timeval& GetTime(void){ return tmActionTime; }
+
 protected:
 	enum Symbol
 	{
@@ -158,7 +158,7 @@ protected:
 	bool isFrameCRCOK(void);
 	bool isValidFrame(void);
 
-	struct timeval tmActionTime;
+
 };
 }
 #endif /* PACKET_H_ */

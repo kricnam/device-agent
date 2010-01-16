@@ -16,12 +16,12 @@ namespace bitcomm
 class ControlTask
 {
 public:
-	ControlTask(SerialPort& port,Modem& m,Protocol& p);
+	ControlTask(Protocol& p,Modem& m);
 	virtual ~ControlTask();
 	void run(void);
 	static void* doProcess(void* pThis);
 protected:
-	SerialPort& portMP;
+
 	Modem& modem;
 	Protocol& protocol;
 };

@@ -143,7 +143,7 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 		try
 		{
 			cmd.ReceiveFrameFrom(port);
-			setLastActionTime(cmd.GetTime());
+
 		}
 		catch(ChannelException& e)
 		{
@@ -182,10 +182,8 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 		CmdPacket request;
 		request.SetCommand(cmdWord[DataRequest], Machine);
 		request.SendTo(port);
-		setLastActionTime(request.GetTime());
-
 		data.ReceiveFrameFrom(port);
-		setLastActionTime(data.GetTime());
+
 	} catch (ChannelException& e)
 	{
 
@@ -204,9 +202,9 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 		try
 		{
 			port.Write(packet.GetData(), sizeof(struct Packet::DataPacketFrame));
-			setLastActionTime(packet.GetTime());
+
 			ack.ReceiveAckFrom(port);
-			setLastActionTime(ack.GetTime());
+
 		}
 		catch(ChannelException& e)
 		{
@@ -246,10 +244,10 @@ void Protocol::HealthCheck(Channel& dev, Packet& status)
 	setReservedTime(tmHealthCheckActive, 30);
 	MPHealthCheckCmdPacket cmd(nLastStatus, Machine);
 	cmd.SendTo(dev);
-	setLastActionTime(cmd.GetTime());
+
 	Packet statusAnswer;
 	statusAnswer.ReceiveFrameFrom(dev);
-	setLastActionTime(statusAnswer.GetTime());
+
 }
 
 void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
@@ -261,10 +259,10 @@ void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
 		{
 			nLastStatus = nNewStatus;
 			statusAnswer.SendTo(port);
-			setLastActionTime(statusAnswer.GetTime());
+
 			Packet ack;
 			ack.ReceiveAckFrom(port);
-			setLastActionTime(ack.GetTime());
+
 		}
 	}
 }
@@ -277,7 +275,7 @@ enum CommunicationCommand Protocol::GetCommand(Channel& port, CmdPacket& cmd)
 		{
 			INFO("Waiting Command from control channel");
 			cmd.ReceiveFrameFrom(port);
-			setLastActionTime(cmd.GetTime());
+
 		} catch (ChannelException& e)
 		{
 			TRACE("Exception:%s",e.what());
@@ -303,7 +301,7 @@ void Protocol::TransferCmd(Channel& dev, Channel& port, CmdPacket& cmd)
 	try
 	{
 		cmd.SendTo(dev);
-		setLastActionTime(cmd.GetTime());
+
 	} catch (ChannelException& e)
 	{
 		printf("%s",e.what());
@@ -314,7 +312,7 @@ void Protocol::TransferCmd(Channel& dev, Channel& port, CmdPacket& cmd)
 		Packet answer;
 		answer.ReceiveFrameFrom(dev);
 		answer.SendTo(port);
-		setLastActionTime(answer.GetTime());
+
 	}
 	catch(ChannelException& e)
 	{
@@ -356,12 +354,12 @@ void Protocol::SendQueueData(DataPacketQueue& queue, Channel& port)
 		for (int i = 0; i < queue.GetSize(); i++)
 		{
 			queue.GetAt(i).SendTo(port);
-			setLastActionTime(queue.GetAt(i).GetTime());
+
 		}
 		Packet ack;
 
 		ack.ReceiveAckFrom(port);
-		setLastActionTime(ack.GetTime());
+
 
 		if (ack.IsValidAck() && ack.IsAck())
 		{

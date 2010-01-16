@@ -10,6 +10,7 @@
 #include "PacketQueue.h"
 #include "Packet.h"
 #include "TCPPort.h"
+#include "SerialPort.h"
 #include "CommunicationCommand.h"
 #include "HistoryDataRequestCmd.h"
 #include <string>
@@ -42,24 +43,39 @@ public:
 	bool IsTimeForSleep(void);
 	void SleepForPowerOn(void);
 	void PatrolRest(void);
-    bool getExtCommunicationError() const
+    bool GetExtCommunicationError()
     {
         return bExtCommunicationError;
-    }
+    };
 
-    unsigned char getMachine() const
+    unsigned char GetMachine()
     {
         return Machine;
-    }
+    };
 
-    void setExtCommunicationError(bool bExtCommunicationError)
+    void SetExtCommunicationError(bool bExtCommunicationError)
     {
         this->bExtCommunicationError = bExtCommunicationError;
-    }
+    };
 
-    void setMachine(unsigned char Machine)
+    void SetMachine(unsigned char Machine)
     {
         this->Machine = Machine;
+    };
+
+    TCPPort& GetControlPort()
+    {
+    	return svrControl;
+    };
+
+    TCPPort& GetDataPort()
+    {
+    	return svrData;
+    };
+
+    SerialPort& GetMPPort()
+    {
+    	return devMP;
     }
 
 protected:
@@ -82,6 +98,9 @@ protected:
 	struct timeval tmLastActive;
 	struct timeval tmHealthCheckActive;
 	struct timeval tmCurrentDataActive;
+	SerialPort devMP;
+	TCPPort svrData;
+	TCPPort svrControl;
 };
 
 }

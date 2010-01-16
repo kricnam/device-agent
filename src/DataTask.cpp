@@ -10,12 +10,13 @@
 #include "SerialPort.h"
 #include "PacketQueue.h"
 #include "Protocol.h"
+#include "pthread.h"
 #include <queue>
 
 namespace bitcomm
 {
 
-DataTask::DataTask(Protocol& p,SerialPort& port,Modem& m):protocol(p),portMP(port),modem(m)
+DataTask::DataTask(Protocol& p,Modem& m):protocol(p),modem(m)
 {
 	pidTask=-1;
 }
@@ -35,21 +36,21 @@ void DataTask::run(void)
 void* DataTask::doProcess(void* pThis)
 {
 	DataTask& task = *(DataTask*)pThis;
-	TCPPort portServer;
-
+	TCPPort& portServer = task.protocol.GetDataPort();
+	SerialPort& portMP = task.protocol.GetMPPort();
 	Packet currentData;
 	DataPacketQueue dataQueue;
 
 	while(1)
 	{
-		task.protocol.RequestCurrentData(task.portMP,currentData);
+		task.protocol.RequestCurrentData(portMP,currentData);
 		dataQueue.Push(currentData);
 		if (!task.modem.IsPowerOff())
 		{
 			task.protocol.SendCurrentData(portServer,dataQueue);
 		}
 
-		task.protocol.HealthCheck(task.portMP,currentData);
+		task.protocol.HealthCheck(portMP,currentData);
 		if (!task.modem.IsPowerOff())
 		{
 			task.protocol.HealthCheckReport(portServer,currentData);
