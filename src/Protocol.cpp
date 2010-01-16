@@ -210,19 +210,36 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 		return;
 	setReservedTime(tmCurrentDataActive, 10 * 60);
 	INFO("request current data");
-	port.Lock();
-	try
-	{
-		CmdPacket request;
-		request.SetCommand(cmdWord[DataRequest], Machine);
-		request.SendTo(port);
-		data.ReceiveFrameFrom(port);
-	}
-	catch (ChannelException& e)
-	{
 
-	}
+	CmdPacket request;
+	int retry = 3;
+	request.SetCommand(cmdWord[DataRequest], Machine);
+	port.SetTimeOut(1000000);
+	port.Lock();
+	do
+	{
+		try
+		{
+			request.SendTo(port);
+			data.ReceiveFrameFrom(port);
+			if (data.GetSize())
+				break;
+		}
+		catch (ChannelException& e)
+		{
+
+		}
+	} while (--retry);
+
 	port.Unlock();
+
+	if (!retry && !data.GetSize())
+	{
+		bInCommunicationError = true;
+	}
+	else
+		bInCommunicationError = false;
+
 	return;
 }
 
@@ -233,6 +250,7 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 	{
 		Packet& packet = queue.Front();
 		Packet ack;
+
 		try
 		{
 			port.Write(packet.GetData(), sizeof(struct Packet::DataPacketFrame));
@@ -254,6 +272,7 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 			}
 		}
 
+
 		if (ack.IsAck() && ack.IsAckNo(packet.GetDataNo()))
 		{
 			queue.Pop();
@@ -268,6 +287,7 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 				return;
 			}
 		}
+
 	};
 }
 

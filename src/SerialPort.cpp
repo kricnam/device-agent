@@ -116,6 +116,7 @@ int SerialPort::Read(char* buf, int len)
 		if (n == -1)
 		{
 			ERRTRACE();
+			Close();
 			return 0;
 		}
 		if (try_again--)
@@ -139,7 +140,10 @@ int SerialPort::Write(const char* buf, int len)
 	if (n > 0)
 		return n;
 	if (n == -1)
+	{
 		ERRTRACE();
+		Close();
+	}
 	return 0;
 }
 }
