@@ -25,6 +25,7 @@ public:
 	virtual void Lock(void);
 	virtual void Unlock(void);
 	const char* GetPort(void) {return strDevName.c_str();};
+	virtual void SetTimeOut(int usec) {timeout= usec;};
 protected:
 	int handle;
 	int timeout;
