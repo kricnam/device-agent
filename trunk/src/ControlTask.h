@@ -22,8 +22,9 @@ public:
 	static void* doProcess(void* pThis);
 protected:
 
-	Modem& modem;
 	Protocol& protocol;
+	Modem& modem;
+
 };
 
 }

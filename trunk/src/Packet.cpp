@@ -34,7 +34,7 @@ void Packet::BuildPacket(const char* szContent, int size, unsigned char Machine)
 	strCache += ETX;
 	unsigned short crc = CRC16::crc16(~0,
 			(const unsigned char*) (strCache.data()) + 3, size + 1);
-	strCache.append(1, (crc >> 8) & 0xFF00);
+	strCache.append(1, (crc >> 8) & 0x00FF);
 	strCache.append(1, (crc & 0x0FF));
 	strCache += EOT;
 }
@@ -129,18 +129,20 @@ void Packet::Dump()
 	DEBUG(buf);
 }
 
-void Packet::Ack(bool bAck, enum CommunicationCommand eCmd, short nNum)
+void Packet::Ack(bool bAck,char Machine ,enum CommunicationCommand eCmd, short nNum)
 {
 	strCache.clear();
-	if (bAck) strCache.append((char)ACK,1);
-	else strCache.append((char)NAK,1);
+	if (bAck) strCache.append(1,(char)ACK);
+	else strCache.append(1,(char)NAK);
 
+	strCache.append(1,Machine);
 	strCache.append(cmdWord[eCmd],2);
 	if (nNum)
 	{
-		strCache.append((nNum>>8) & 0xFF,1);
-		strCache.append(nNum & 0xFF,1);
+		strCache.append(1,((nNum>>8) & 0x0FF));
+		strCache.append(1,(nNum & 0x0FF));
 	}
+	Dump();
 }
 
 bool Packet::isValidFrame(void)
@@ -169,8 +171,10 @@ bool Packet::isFrameCRCOK(void)
 	{
 		unsigned short crc = CRC16::crc16(~0,
 				(const unsigned char*) (strCache.data()) + 3, strCache.size()
-						- 5);
-		return crc == strCache[tail - 2] * 256 + strCache[tail - 1];
+						- 6);
+		TRACE("CRC calculated = %04x",crc);
+
+		return crc == (((strCache[tail - 2] << 8) & 0xFF00) | (0x00FF & strCache[tail - 1]));
 	}
 	return false;
 }

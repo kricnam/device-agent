@@ -18,19 +18,24 @@
 using namespace bitcomm;
 
 int main(void) {
-	//Initiate Serial Port
-	TRACE("Init Serial port");
-
+	INFO("Open configure file agent.conf");
+	Config config("./agent.conf");
 	Modem exp500;
 
-	Config config("./agent.conf");
-
 	Protocol protocol(config.GetServerName().c_str());
+	INFO("Set server as: %s",protocol.GetServerName());
 	protocol.SetMachine(config.GetMachine());
+	INFO("Set machine No. as: %d",protocol.GetMachine());
+
+	protocol.GetMPPort().Open(config.GetMPdev().c_str());
+
 	DataTask  dataProcess(protocol,exp500);
 	ControlTask controlProcess(protocol,exp500);
 
+
+
 	dataProcess.run();
+
 	controlProcess.doProcess(&controlProcess);
 
 	return EXIT_SUCCESS;

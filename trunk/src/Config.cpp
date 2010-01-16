@@ -100,6 +100,15 @@ string Config::GetServerName()
 	return "";
 }
 
+string Config::GetMPdev()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"MP_PORT",tmp,1024)==0)
+		return tmp;
+	return "";
+
+}
+
 int Config::GetMachine()
 {
 	char tmp[1024]={0};
@@ -107,6 +116,6 @@ int Config::GetMachine()
 	{
 		return atoi(tmp);
 	}
-	return 0;
+	return 1;
 }
 }

@@ -20,6 +20,7 @@ public:
 	Config(const char* szFile);
 	virtual ~Config();
 	string GetServerName();
+	string GetMPdev();
 	int GetMachine();
 protected:
 	string strFileName;

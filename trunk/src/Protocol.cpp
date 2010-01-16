@@ -52,21 +52,31 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 
 	int nPort = negoiateChannel(port, 50101);
 	TRACE("Get Port %d",nPort);
+	struct timeval tmStart,tmNow,tmDiff;
 	while (nPort && retry_connect--)
 	{
 		while (retry--)
 		{
 			port.SetRemotePort(nPort);
 			port.SetTimeOut(5000000);
-			if (port.Connect() > 0)
+			gettimeofday(&tmStart,0);
+			if (port.Connect() == 0)
 			{
+				TRACE("connected");
 				bExtCommunicationError = false;
 				return;
 			}
+
+			//sleep
+			gettimeofday(&tmNow,0);
+			timersub(&tmNow,&tmStart,&tmDiff);
+			if (tmDiff.tv_usec > 500000) tmDiff.tv_sec++;
+			if (tmDiff.tv_sec < 5) sleep(5 -tmDiff.tv_sec);
 		};
 		nPort = negoiateChannel(port, 50101);
 		retry = 3;
 	};
+	DEBUG("Set External communication error");
 	bExtCommunicationError = true;
 }
 
@@ -75,14 +85,25 @@ bool Protocol::IsTimeForSleep(void)
 	struct timeval tmNow;
 	struct timeval tmDiff;
 	gettimeofday(&tmNow, 0);
+	setLastActionTime(srvData.GetActiveTime());
+	setLastActionTime(srvControl.GetActiveTime());
+	setLastActionTime(devMP.GetActiveTime());
 	timersub(&tmNow,&tmLastActive,&tmDiff);
-	INFO("idle time %d",tmDiff.tv_sec);
+	INFO("idle time %us [setting:%d]",tmDiff.tv_sec,nIdleTimeSetting);
 	return ((unsigned )tmDiff.tv_sec > (unsigned) nIdleTimeSetting);
 }
 
 void Protocol::PatrolRest(void)
 {
-
+	struct timeval tmNow, tmSleep2, tmSleep1;
+	gettimeofday(&tmNow, 0);
+	timersub(&tmCurrentDataActive,&tmNow,&tmSleep1);
+	timersub(&tmHealthCheckActive,&tmNow,&tmSleep2);
+	if (tmSleep1.tv_usec > 500000) tmSleep1.tv_sec++;
+	if (tmSleep2.tv_usec > 500000) tmSleep2.tv_sec++;
+	int n = (tmSleep2.tv_sec > tmSleep1.tv_sec)?tmSleep1.tv_sec:tmSleep2.tv_sec;
+	INFO("Sleep %d",n);
+	sleep(n);
 }
 
 void Protocol::SleepForPowerOn(void)
@@ -110,19 +131,19 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 		{
 			retry++;
 			TRACE("Retry %d",retry);
-			if (retry == 12)
+			if (retry == 18)
 				break;
-			if (retry % 3 == 0)
+			if (retry % 6 == 0)
 			{
+				TRACE("Waiting 30s");
+				sleep(30);
 				if (start_port == nStartPort)
 					start_port++;
 				else
 					start_port = nStartPort;
 			}
-			if (retry % 6 == 0)
+			else if (retry % 3 == 0)
 			{
-				TRACE("Waiting 30s");
-				sleep(30);
 				if (start_port == nStartPort)
 					start_port++;
 				else
@@ -163,10 +184,23 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 			continue;
 		}
 
+		try
+		{
+			Packet ack;
+			ack.Ack(true,Machine,cmd.CommandType(),cmd.GetAssignedPort());
+			ack.SendTo(port);
+		}
+		catch(ChannelException& e )
+		{
+			WARNING(e.what());
+		}
+
 		port.Close();
+
 		return cmd.GetAssignedPort();
 
 	} while (true);
+
 	return 0;
 }
 
@@ -175,7 +209,7 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 	if (!isTimeForAction(tmCurrentDataActive))
 		return;
 	setReservedTime(tmCurrentDataActive, 10 * 60);
-
+	INFO("request current data");
 	port.Lock();
 	try
 	{
@@ -184,7 +218,8 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 		request.SendTo(port);
 		data.ReceiveFrameFrom(port);
 
-	} catch (ChannelException& e)
+	}
+	catch (ChannelException& e)
 	{
 
 	}
@@ -269,29 +304,8 @@ void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
 
 enum CommunicationCommand Protocol::GetCommand(Channel& port, CmdPacket& cmd)
 {
-	do
-	{
-		try
-		{
-			INFO("Waiting Command from control channel");
-			cmd.ReceiveFrameFrom(port);
-
-		} catch (ChannelException& e)
-		{
-			TRACE("Exception:%s",e.what());
-			if (e.bUnConnected)
-			{
-				if (typeid(port) == typeid(TCPPort))
-				{
-					NegoiateControlChannel(dynamic_cast<TCPPort&> (port));
-				}
-				else
-					port.Open();
-				continue;
-			}
-		}
-	} while (false);
-
+	INFO("Waiting Command from control channel");
+	cmd.ReceiveFrameFrom(port);
 	return cmd.CommandType();
 }
 
@@ -396,6 +410,7 @@ bool Protocol::isTimeForAction(struct timeval & timer)
 {
 	struct timeval tmNow;
 	gettimeofday(&tmNow, 0);
+	TRACE("timer:%u  now:%u",timer.tv_sec,tmNow.tv_sec);
 	return !timercmp(&tmNow,&timer,<);
 }
 

@@ -142,6 +142,7 @@ int TCPPort::Read(char* buf,int len) throw(ChannelException)
 			throw excp;
 		}
 	}
+	if (n==0) Close();
 	gettimeofday(&tmLastAction, 0);
 	return n;
 }
@@ -153,6 +154,7 @@ int TCPPort::Write(const char* buf,int len) throw(ChannelException)
 	if (n<0)
 	{
 		int err = errno;
+		ERRTRACE();
 		perror("TCPPort::Write");
 		ChannelException excp(err);
 		throw excp;
