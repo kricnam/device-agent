@@ -217,7 +217,6 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 		request.SetCommand(cmdWord[DataRequest], Machine);
 		request.SendTo(port);
 		data.ReceiveFrameFrom(port);
-
 	}
 	catch (ChannelException& e)
 	{
@@ -276,6 +275,7 @@ void Protocol::HealthCheck(Channel& dev, Packet& status)
 {
 	if (!isTimeForAction(tmHealthCheckActive))
 		return;
+	TRACE("");
 	setReservedTime(tmHealthCheckActive, 30);
 	MPHealthCheckCmdPacket cmd(nLastStatus, Machine);
 	cmd.SendTo(dev);
