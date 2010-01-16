@@ -6,7 +6,7 @@
  */
 
 #include "PacketQueue.h"
-
+#include "DebugLog.h"
 namespace bitcomm
 {
 
@@ -22,15 +22,17 @@ DataPacketQueue::~DataPacketQueue()
 
 void DataPacketQueue::Push(Packet& data)
 {
-	list<Packet>::iterator it;
-
-	for(it = queue.begin();it!=queue.end();it++)
+	TRACE("data[%d]",data.GetSize());
+	if (data.GetSize())
 	{
-		if ((*it).GetDataNo() == data.GetDataNo())
-			return;
+		list<Packet>::iterator it;
+		for(it = queue.begin();it!=queue.end();it++)
+		{
+			if ((*it).GetDataNo() == data.GetDataNo())
+				return;
+		}
+		queue.push_back(data);
 	}
-
-	queue.push_back(data);
 }
 
 Packet& DataPacketQueue::Front(void)

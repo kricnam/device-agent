@@ -84,7 +84,7 @@ void SerialPort::Lock(void)
 	}
 }
 
-void bitcomm::SerialPort::Close()
+void SerialPort::Close()
 {
 	if (handle > 0)
 	{
@@ -123,7 +123,7 @@ int SerialPort::Read(char* buf, int len)
 			usleep(timeout);
 			continue;
 		}
-	} while (false);
+	} while (try_again);
 	return n;
 }
 
