@@ -133,7 +133,7 @@ public:
 	bool IsValidStatus(void);
 	bool IsValidAck(void);
 	bool IsAck(void);
-	void Ack(bool bAck,enum CommunicationCommand eCmd, short nNum=0);
+	void Ack(bool bAck,char Machine,enum CommunicationCommand eCmd, short nNum=0);
 	unsigned short GetDataNo(void);
 	unsigned short GetAckNo(void);
 	unsigned short GetAssignedPort(void);

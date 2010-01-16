@@ -27,6 +27,8 @@ public:
 		strServerName = szServer;
 		nIdleTimeSetting = 60;
 		nIntervalSetting = 600;
+		gettimeofday(&tmCurrentDataActive,0);
+		tmHealthCheckActive = tmCurrentDataActive;
 	};
 	virtual ~Protocol();
 	void RequestCurrentData(Channel& port,Packet& data);
@@ -65,19 +67,23 @@ public:
 
     TCPPort& GetControlPort()
     {
-    	return svrControl;
+    	return srvControl;
     };
 
     TCPPort& GetDataPort()
     {
-    	return svrData;
+    	return srvData;
     };
 
     SerialPort& GetMPPort()
     {
     	return devMP;
-    }
+    };
 
+    const char* GetServerName()
+	{
+    	return strServerName.c_str();
+	};
 protected:
 
 	int negoiateChannel(TCPPort& port,int nStartPort);
@@ -99,8 +105,8 @@ protected:
 	struct timeval tmHealthCheckActive;
 	struct timeval tmCurrentDataActive;
 	SerialPort devMP;
-	TCPPort svrData;
-	TCPPort svrControl;
+	TCPPort srvData;
+	TCPPort srvControl;
 };
 
 }

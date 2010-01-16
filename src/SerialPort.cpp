@@ -12,6 +12,7 @@
 #include "unistd.h"
 #include "stdio.h"
 #include "termios.h"
+#include "DebugLog.h"
 using namespace std;
 namespace bitcomm
 {
@@ -34,11 +35,11 @@ int SerialPort::Open(const char* szDev)
 
 	if (strDevName != szDev)
 		strDevName = szDev;
-
+	INFO("%s",szDev);
 	handle = open(strDevName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if (handle < 0)
 	{
-		perror("SerialPort::Open");
+		ERRTRACE();
 		return -1;
 	}
 	SetCom();
@@ -72,13 +73,15 @@ void SerialPort::SetCom(void)
 
 	int n = tcsetattr(handle, TCSANOW, &newtio);
 	if (n < 0)
-		perror("SerialPort::SetCom");
+		ERRTRACE();
 }
 
 void SerialPort::Lock(void)
 {
 	if (flock(handle, LOCK_EX) < 0)
-		perror("SerialPort::Lock");
+	{
+		ERRTRACE();
+	}
 }
 
 void bitcomm::SerialPort::Close()
@@ -94,7 +97,7 @@ void bitcomm::SerialPort::Close()
 void SerialPort::Unlock(void)
 {
 	if (flock(handle, LOCK_UN) < 0)
-		perror("SerialPort::Unlock");
+		ERRTRACE();
 }
 
 int SerialPort::Read(char* buf, int len)
@@ -112,7 +115,7 @@ int SerialPort::Read(char* buf, int len)
 			return n;
 		if (n == -1)
 		{
-			perror("SerialPort::Read");
+			ERRTRACE();
 			return 0;
 		}
 		if (try_again--)
@@ -136,7 +139,7 @@ int SerialPort::Write(const char* buf, int len)
 	if (n > 0)
 		return n;
 	if (n == -1)
-		perror("SerialPort::Write");
+		ERRTRACE();
 	return 0;
 }
 }

@@ -24,6 +24,7 @@ public:
 	virtual int Write(const char* buf,int len);
 	virtual void Lock(void);
 	virtual void Unlock(void);
+	const char* GetPort(void) {return strDevName.c_str();};
 protected:
 	int handle;
 	int timeout;

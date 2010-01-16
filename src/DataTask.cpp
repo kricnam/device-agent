@@ -12,7 +12,7 @@
 #include "Protocol.h"
 #include "pthread.h"
 #include <queue>
-
+#include "DebugLog.h"
 namespace bitcomm
 {
 
@@ -29,12 +29,15 @@ DataTask::~DataTask()
 void DataTask::run(void)
 {
 	//Start the thread to read and send data
-	if (pidTask != (unsigned )-1) return;
-	pthread_create(&pidTask,NULL,DataTask::doProcess,NULL);
+	TRACE("pidTask=%d",pidTask);
+	if (pidTask !=(pthread_t) -1) return;
+	TRACE("create thread");
+	pthread_create(&pidTask,NULL,DataTask::doProcess,this);
 }
 
 void* DataTask::doProcess(void* pThis)
 {
+	INFO("started");
 	DataTask& task = *(DataTask*)pThis;
 	TCPPort& portServer = task.protocol.GetDataPort();
 	SerialPort& portMP = task.protocol.GetMPPort();
