@@ -87,9 +87,10 @@ bool Protocol::IsTimeForSleep(void)
 	struct timeval tmNow;
 	struct timeval tmDiff;
 	gettimeofday(&tmNow, 0);
+
 	setLastActionTime(srvData.GetActiveTime());
 	setLastActionTime(srvControl.GetActiveTime());
-	setLastActionTime(devMP.GetActiveTime());
+
 	timersub(&tmNow,&tmLastActive,&tmDiff);
 	INFO("idle time %us [setting:%d]",tmDiff.tv_sec,nIdleTimeSetting);
 	return ((unsigned) tmDiff.tv_sec > (unsigned) nIdleTimeSetting);
@@ -355,29 +356,70 @@ enum CommunicationCommand Protocol::GetCommand(Channel& port, CmdPacket& cmd)
 
 void Protocol::TransferCmd(Channel& dev, Channel& port, CmdPacket& cmd)
 {
+	int retry=0;
+	Packet answer;
 	dev.Lock();
-	try
-	{
-		cmd.SendTo(dev);
+	dev.SetTimeOut(5000000);
+		do
+		{
+			if(!answer.GetSize())
+			{
+				try
+				{
+					cmd.SendTo(dev);
+				}
+				catch (ChannelException& e)
+				{
+					WARNING("%s", e.what());
+				}
+			}
 
-	} catch (ChannelException& e)
-	{
-		printf("%s", e.what());
-	}
-	dev.Unlock();
-	try
-	{
-		Packet answer;
-		answer.ReceiveFrameFrom(dev);
-		answer.SendTo(port);
+			try
+			{
+				if (!answer.GetSize())
+				{
+					answer.ReceiveFrameFrom(dev);
+				}
 
-	} catch (ChannelException& e)
-	{
-		printf("%s", e.what());
-	}
+				if (answer.GetSize())
+				{
+					answer.SendTo(port);
+					retry=0;
+					break;
+				}
+				else
+				{
+					retry++;
+					continue;
+				}
+			}
+			catch (ChannelException& e)
+			{
+						WARNING("%s", e.what());
+						retry++;
+			}
+		} while (retry < 3);
+
+		dev.Unlock();
+
+		if (answer.GetSize()==0)
+		{
+			bInCommunicationError = true;
+		}
+		else if(retry==3)
+		{
+			bExtCommunicationError = true;
+		}
+		else
+		{
+			bExtCommunicationError = false;
+			bInCommunicationError = false;
+		}
+
 }
 
-void Protocol::HistoryDataTransfer(Channel& dev, Channel& port,
+void Protocol::HistoryDataTransfer(Channel&
+		dev, Channel& port,
 		HistoryDataRequestCmd& cmd)
 {
 	int nStart = cmd.GetStartNum();
