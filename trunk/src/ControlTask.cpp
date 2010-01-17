@@ -48,6 +48,7 @@ void* ControlTask::doProcess(void* pThis)
 		try
 		{
 			eCmd = task.protocol.GetCommand(port,cmd);
+			TRACE("Get Command %s",cmdWord[eCmd]);
 			switch(eCmd)
 			{
 			case DataRequest:
@@ -99,12 +100,6 @@ void* ControlTask::doProcess(void* pThis)
 				break;
 			case CMD_END:
 				TRACE("Got no command");
-				if (task.protocol.IsTimeForSleep())
-				{
-					//Modem Power off
-					task.modem.PowerOff();
-					task.protocol.SleepForPowerOn();
-				}
 				break;
 			};
 
@@ -115,12 +110,19 @@ void* ControlTask::doProcess(void* pThis)
 			if (e.bUnConnected)
 			{
 				task.protocol.NegoiateControlChannel(port);
-				continue;
 			}
 
 		}
 
-	}
+		if (task.protocol.IsTimeForSleep())
+		{
+			//Modem Power off
+			task.modem.PowerOff();
+			task.protocol.SleepForPowerOn();
+		}
+
+
+	};
 	return pThis;
 }
 
