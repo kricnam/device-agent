@@ -107,6 +107,7 @@ protected:
 	SerialPort devMP;
 	TCPPort srvData;
 	TCPPort srvControl;
+	DataPacketQueue statusQueue;
 };
 
 }

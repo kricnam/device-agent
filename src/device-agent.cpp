@@ -35,8 +35,8 @@ int main(void) {
 
 
 	dataProcess.run();
-
-	controlProcess.doProcess(&controlProcess);
+	while(1){sleep(1000);};
+	//controlProcess.doProcess(&controlProcess);
 
 	return EXIT_SUCCESS;
 }
