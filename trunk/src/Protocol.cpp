@@ -52,14 +52,14 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 
 	int nPort = negoiateChannel(port, 50101);
 	TRACE("Get Port %d",nPort);
-	struct timeval tmStart,tmNow,tmDiff;
+	struct timeval tmStart, tmNow, tmDiff;
 	while (nPort && retry_connect--)
 	{
 		while (retry--)
 		{
 			port.SetRemotePort(nPort);
 			port.SetTimeOut(5000000);
-			gettimeofday(&tmStart,0);
+			gettimeofday(&tmStart, 0);
 			if (port.Connect() == 0)
 			{
 				TRACE("connected");
@@ -68,10 +68,12 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 			}
 
 			//sleep
-			gettimeofday(&tmNow,0);
+			gettimeofday(&tmNow, 0);
 			timersub(&tmNow,&tmStart,&tmDiff);
-			if (tmDiff.tv_usec > 500000) tmDiff.tv_sec++;
-			if (tmDiff.tv_sec < 5) sleep(5 -tmDiff.tv_sec);
+			if (tmDiff.tv_usec > 500000)
+				tmDiff.tv_sec++;
+			if (tmDiff.tv_sec < 5)
+				sleep(5 - tmDiff.tv_sec);
 		};
 		nPort = negoiateChannel(port, 50101);
 		retry = 3;
@@ -90,7 +92,7 @@ bool Protocol::IsTimeForSleep(void)
 	setLastActionTime(devMP.GetActiveTime());
 	timersub(&tmNow,&tmLastActive,&tmDiff);
 	INFO("idle time %us [setting:%d]",tmDiff.tv_sec,nIdleTimeSetting);
-	return ((unsigned )tmDiff.tv_sec > (unsigned) nIdleTimeSetting);
+	return ((unsigned) tmDiff.tv_sec > (unsigned) nIdleTimeSetting);
 }
 
 void Protocol::PatrolRest(void)
@@ -99,11 +101,11 @@ void Protocol::PatrolRest(void)
 	gettimeofday(&tmNow, 0);
 	timersub(&tmCurrentDataActive,&tmNow,&tmSleep1);
 	timersub(&tmHealthCheckActive,&tmNow,&tmSleep2);
-	if (tmSleep1.tv_usec > 500000) tmSleep1.tv_sec++;
-	if (tmSleep2.tv_usec > 500000) tmSleep2.tv_sec++;
-	int n = (tmSleep2.tv_sec > tmSleep1.tv_sec)?tmSleep1.tv_sec:tmSleep2.tv_sec;
-	INFO("Sleep %d",n);
-	sleep(n);
+	int n1 = tmSleep1.tv_sec*1000000+tmSleep1.tv_usec;
+	int n2 = tmSleep2.tv_sec*1000000+tmSleep2.tv_usec;
+	n1 = (n1>n2)?n2:n1;
+	INFO("Sleep %d millisecond",n1/1000);
+	usleep(n1);
 }
 
 void Protocol::SleepForPowerOn(void)
@@ -165,8 +167,7 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 		{
 			cmd.ReceiveFrameFrom(port);
 
-		}
-		catch(ChannelException& e)
+		} catch (ChannelException& e)
 		{
 			TRACE("exception %s",e.what());
 		}
@@ -187,10 +188,9 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 		try
 		{
 			Packet ack;
-			ack.Ack(true,Machine,cmd.CommandType(),cmd.GetAssignedPort());
+			ack.Ack(true, Machine, cmd.CommandType(), cmd.GetAssignedPort());
 			ack.SendTo(port);
-		}
-		catch(ChannelException& e )
+		} catch (ChannelException& e)
 		{
 			WARNING(e.what());
 		}
@@ -224,8 +224,7 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 			data.ReceiveFrameFrom(port);
 			if (data.GetSize())
 				break;
-		}
-		catch (ChannelException& e)
+		} catch (ChannelException& e)
 		{
 
 		}
@@ -235,6 +234,7 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 
 	if (!retry && !data.GetSize())
 	{
+		INFO("set inter communication error");
 		bInCommunicationError = true;
 	}
 	else
@@ -254,12 +254,12 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 		try
 		{
 			port.Write(packet.GetData(), sizeof(struct Packet::DataPacketFrame));
-
 			ack.ReceiveAckFrom(port);
-
 		}
-		catch(ChannelException& e)
+		catch (ChannelException& e)
 		{
+			WARNING(e.what());
+			retry++;
 			if (e.bUnConnected)
 			{
 				if (typeid(port) == typeid(TCPPort))
@@ -272,7 +272,6 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 			}
 		}
 
-
 		if (ack.IsAck() && ack.IsAckNo(packet.GetDataNo()))
 		{
 			queue.Pop();
@@ -280,14 +279,13 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 		}
 		else
 		{
-			retry++;
 			if (retry > 2)
 			{
 				bExtCommunicationError = true;
 				return;
 			}
+			retry++;
 		}
-
 	};
 }
 
@@ -297,12 +295,10 @@ void Protocol::HealthCheck(Channel& dev, Packet& status)
 		return;
 	TRACE("");
 	setReservedTime(tmHealthCheckActive, 30);
-	MPHealthCheckCmdPacket cmd(nLastStatus, Machine);
+	MPHealthCheckCmdPacket cmd(nLastStatus, Machine,
+			bInCommunicationError,bExtCommunicationError);
 	cmd.SendTo(dev);
-
-	Packet statusAnswer;
-	statusAnswer.ReceiveFrameFrom(dev);
-
+	status.ReceiveFrameFrom(dev);
 }
 
 void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
@@ -312,12 +308,40 @@ void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
 		unsigned int nNewStatus = statusAnswer.GetStatus();
 		if (nNewStatus != nLastStatus)
 		{
-			nLastStatus = nNewStatus;
-			statusAnswer.SendTo(port);
-
 			Packet ack;
-			ack.ReceiveAckFrom(port);
+			nLastStatus = nNewStatus;
+			statusQueue.Push(statusAnswer);
+			int  retry=0;
+			while(statusQueue.GetSize())
+			{
 
+				statusAnswer = statusQueue.Front();
+				try
+				{
+						statusAnswer.SendTo(port);
+						ack.ReceiveAckFrom(port);
+				}
+				catch (ChannelException& e)
+				{
+					retry++;
+					WARNING(e.what());
+				}
+
+				if (ack.IsAck() && ack.IsAckNo(statusAnswer.GetDataNo()))
+				{
+						statusQueue.Pop();
+						retry = 0;
+				}
+				else
+				{
+					if (retry > 2)
+					{
+						bExtCommunicationError = true;
+						return;
+					}
+					retry++;
+				}
+			};
 		}
 	}
 }
@@ -338,7 +362,7 @@ void Protocol::TransferCmd(Channel& dev, Channel& port, CmdPacket& cmd)
 
 	} catch (ChannelException& e)
 	{
-		printf("%s",e.what());
+		printf("%s", e.what());
 	}
 	dev.Unlock();
 	try
@@ -347,10 +371,9 @@ void Protocol::TransferCmd(Channel& dev, Channel& port, CmdPacket& cmd)
 		answer.ReceiveFrameFrom(dev);
 		answer.SendTo(port);
 
-	}
-	catch(ChannelException& e)
+	} catch (ChannelException& e)
 	{
-		printf("%s",e.what());
+		printf("%s", e.what());
 	}
 }
 
@@ -393,7 +416,6 @@ void Protocol::SendQueueData(DataPacketQueue& queue, Channel& port)
 		Packet ack;
 
 		ack.ReceiveAckFrom(port);
-
 
 		if (ack.IsValidAck() && ack.IsAck())
 		{
