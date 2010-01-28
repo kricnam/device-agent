@@ -1,14 +1,16 @@
 #labels Phase-Design,Phase-Implementation
 Present the relationship between hardware and software
 
-all the connector:
+<wiki:toc max_depth="1" />
+
+*the signal level for all the connector:
 ||Voltage||Level||
 ||+3.3V||H||
 ||0V||L||
-
 *Core Pin: the pin number of Core board
+*Out/In is from the view of this board
 
-= Control Connector (CN3)=
+= Control (CN12)=
 ||*Pin*||*Core Pin*||*Port*_(software view)_||*Name*||*Meaning*||
 ||1||        A10||              PB5||CTL_IN2||Shut down,Input||
 ||2||        A12||              PB8||CTL_IN1|| ||
