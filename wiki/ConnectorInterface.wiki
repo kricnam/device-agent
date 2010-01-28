@@ -1,12 +1,12 @@
 #labels Phase-Design,Phase-Implementation
 Present the relationship between hardware and software
 
-= Status Connector =
+= Control Connector =
 
-||*Pin*||*Core Pin*||*Port*_(software view)_||
-||1||        A10||              PB5||
-||2||        A12||              PB8||
-||3||        A13||              PB15||
-||4||        A15||              PB17||
-||5||        GND||              ||
-||6||        A17||              PB21||
+||*Pin*||*Core Pin*||*Port*_(software view)_||*Name*||*Meaning*||
+||1||        A10||              PB5||CTL_IN2||Shut down,Input||
+||2||        A12||              PB8||CTL_IN1|| ||
+||3||        A13||              PB15||CTL_OUT2||Level NG||
+||4||        A15||              PB17||CTL_OUT1||Shut down OK,Output||
+||5||        GND||              ||GND||Ground||
+||6||        A17||              PB21||/EXT_RST1||External reset input||
