@@ -3,7 +3,7 @@ Present the relationship between hardware and software
 
 = Status Connector =
 
-||*Pin*||*Core Pin*||*Port*(_software view_)||
+||*Pin*||*Core Pin*||*Port*_(software view)_||
 ||1||        A10||              PB5||
 ||2||        A12||              PB8||
 ||3||        A13||              PB15||
