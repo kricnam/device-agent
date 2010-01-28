@@ -1,14 +1,12 @@
 #labels Phase-Design,Phase-Implementation
 Present the relationship between hardware and software
 
-= Introduction =
+= Status Connector =
 
-
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+*Pin*     *Core Pin*       *Port*(_software view_)
+1        A10              PB5
+2        A12              PB8
+3        A13              PB15
+4        A15              PB17
+5        GND              
+6        A17              PB21
