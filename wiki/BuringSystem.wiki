@@ -6,6 +6,7 @@ Howto burning system image
  # start SAM-BA program, select board type(at91sam9261ek) and port(/dev/ttyUSB1)
  # select Nandflash tab
  # select Enable Nandflash script and Excute
+ # {option) execute Erase All script
  # select SendBootFile, and Excute, select the BootStrap file
  # send U-Boot bin file for Nandflash to address 0x20000
  # send linux uImage bin file to nand flash address 0xA0000
