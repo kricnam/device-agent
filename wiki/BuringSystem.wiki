@@ -16,6 +16,6 @@ Howto burning system image
  # (optional) excute EraseAll script
  # excute SendBootFile script
  # send U-Boot bin file for dataflash tp address 0x8400
- # send linux uImage bin file to nand flash address 0x42000
+ # send linux uImage bin file to data-flash address 0x42000
  # type exit to quit SAM-BA
  # now can restart the board
