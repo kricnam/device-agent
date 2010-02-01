@@ -11,7 +11,9 @@
 
 = U-boot setup cmd = 
 
- * setenv bootcmd cp.b 0xC0042000 0x20400000 0x300000\; bootm 0x20400000
- * setenv bootargs mem=64M console=ttyS0,115200 root=/dev/mtdblock1 rw rootfstype=yaffs2
- * setenv bootdelay 0
- * saveenv
+ {{{
+setenv bootcmd cp.b 0xC0042000 0x20400000 0x300000\; bootm 0x20400000
+setenv bootargs mem=64M console=ttyS0,115200 root=/dev/mtdblock1 rw rootfstype=yaffs2
+setenv bootdelay 0
+saveenv
+}}}
