@@ -7,7 +7,7 @@
 
 #ifndef MODEM_H_
 #define MODEM_H_
-
+#include "TCPPort.h"
 namespace bitcomm
 {
 
@@ -20,7 +20,14 @@ public:
 	void PowerOn(void);
 	bool IsPowerOff(void);
 protected:
+	int UT_PowerOn(void);
+	int WaitATResponse(const char* szWait,bool bClearCache=true);
+	int AttachNet(void);
+	int EstablishIPConnection(void);
+	float GetSignalLevel();
 	bool bPowerOff;
+	string strCache;
+	TCPPort UT_ATPort;
 };
 
 }
