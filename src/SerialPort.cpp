@@ -135,6 +135,8 @@ int SerialPort::Write(const char* buf, int len)
 	if (handle == -1)
 		Open(strDevName.c_str());
 
+	DUMP(buf,len);
+
 	int n = write(handle, buf, len);
 	tcdrain(handle);
 	if (n > 0)

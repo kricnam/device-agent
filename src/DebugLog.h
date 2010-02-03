@@ -70,6 +70,7 @@ public:
 	~TraceLog();
 
 	void Trace(int nLevel, const char* szFile, const char* szFunc,int nLine, const char* szFmt,...);
+	void Dump(int nLev, const char* szFile, const char* szFunc ,int nLine,const char* buf,int len);
 	static void Init(const char* Title,const char* szIP, int nPort);
 
 	static inline void SetLocalOut(bool bEnable) {bLocal = bEnable;}
@@ -105,7 +106,7 @@ extern TraceLog gTraceLog;
 #define CRITICAL(args...)	gTraceLog.Trace(LP_CRITICAL,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
 #define ALERT(args...) 		gTraceLog.Trace(LP_ALERT,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
 #define EMERGENCY(args...) 	gTraceLog.Trace(LP_EMERGENCY,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,args)
-
+#define DUMP(buf,len)		gTraceLog.Dump(LP_TRACE,(const char*)__FILE__,(const char*)__FUNCTION__,__LINE__,buf,len)
 #define SETLOCALOUT(x)		gTraceLog.SetLocalOut(x)
 #define SETTRACELEVEL(x)	gTraceLog.SetTraceLevel(x)
 //TODO: make it thread safe
