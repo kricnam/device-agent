@@ -41,7 +41,7 @@ void Packet::BuildPacket(const char* szContent, int size, unsigned char Machine)
 
 void Packet::SendTo(Channel & port)
 {
-	port.Write(strCache.c_str(), strCache.size());
+	port.Write(strCache.data(), strCache.size());
 }
 
 void Packet::ReceiveAckFrom(Channel & port)

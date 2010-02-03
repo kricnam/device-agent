@@ -29,6 +29,10 @@ public:
 		nIntervalSetting = 600;
 		gettimeofday(&tmCurrentDataActive,0);
 		tmHealthCheckActive = tmCurrentDataActive;
+		nLastStatus = 0;
+		bExtCommunicationError = false;
+		bInCommunicationError = false;
+
 	};
 	virtual ~Protocol();
 	void RequestCurrentData(Channel& port,Packet& data);

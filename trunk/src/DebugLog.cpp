@@ -138,6 +138,50 @@ void TraceLog::SendOut(const char* szBuf)
 	}
 }
 
+void TraceLog::Dump(int nLev, const char* szFile, const char* szFunc ,int nLine,const char* buf,int len)
+{
+	if (nLev <= nLevel)
+		return;
+	int n;
+	int size = len*3+128;
+	char* pBuf = NULL;
+	char szBuf[80] = { 0 };
+
+
+	if ((pBuf = (char*) malloc(size)) == NULL)
+	{
+		pBuf = szBuf;
+		size = 80;
+	}
+
+	SetTitle(pBuf, size);
+	int used = strlen(pBuf);
+	if (used < size)
+	{
+		snprintf(pBuf+used, size-used, "%s %s:%u[%s]\t",priorityNames[nLev].c_str(),szFile,nLine,szFunc);
+		used = strlen(pBuf);
+	}
+		/* Try to print in the allocated space. */
+	if (used < size)
+	{
+		for (int i = 0; i < len; i++)
+		{
+			if (used >= size) break;
+			n = snprintf(pBuf + used, size - used, "%02hhX ", buf[i]);
+			if (n > 0)
+				used += n;
+			else
+				break;
+		}
+	}
+
+	/* If that worked, return the string. */
+	SendOut(pBuf);
+	if (80 != size)
+		free(pBuf);
+	return;
+}
+
 void TraceLog::Trace(int nLev, const char* szFile, const char* szFunc ,int nLine, const char* szFmt, ...)
 {
 	if (nLev <= nLevel)
