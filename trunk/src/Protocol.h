@@ -16,6 +16,8 @@
 #include <string>
 #include <list>
 #include <sys/time.h>
+#include <time.h>
+
 namespace bitcomm
 {
 
@@ -49,6 +51,7 @@ public:
 	bool IsTimeForSleep(void);
 	void SleepForPowerOn(void);
 	void PatrolRest(void);
+	time_t GetMPTime(void);
     bool GetExtCommunicationError()
     {
         return bExtCommunicationError;

@@ -10,7 +10,7 @@
 #include <string>
 #include "Channel.h"
 #include <sys/time.h>
-
+#include <time.h>
 using namespace std;
 namespace bitcomm
 {
@@ -120,7 +120,17 @@ public:
 		unsigned char Machine;
 		char cmd[2];
 		unsigned short dataNumber;
-	};
+	}__attribute__ ((packed));
+
+	struct GetTimeFrame
+	{
+		struct FrameHead head;
+		char cmd[2];
+		unsigned short length;
+		struct FrameTime time;
+		unsigned char second;
+		struct FrameEnd end;
+	} __attribute__ ((packed));
 
 	const char* GetData() {return strCache.data();};
 	int GetSize() 	{return strCache.size();};
@@ -138,6 +148,7 @@ public:
 	unsigned short GetAckNo(void);
 	unsigned short GetAssignedPort(void);
 	unsigned int GetStatus(void);
+	time_t GetMPTime(void);
 
 protected:
 	enum Symbol
