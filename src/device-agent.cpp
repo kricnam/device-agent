@@ -5,12 +5,14 @@
 // Copyright   : No Warranty, No Right reserved
 // Description : Hello World in C, Ansi-style
 //============================================================================
-
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
-
+#include <sys/time.h>
+#include <fcntl.h>
+#include <linux/input.h>
 #include "DataTask.h"
 #include "ControlTask.h"
 #include "SerialPort.h"
@@ -48,15 +50,41 @@ int main(void) {
 
 	protocol.GetMPPort().Open(config.GetMPdev().c_str());
 
+	INFO("Set system clock...");
+	time_t Now = protocol.GetMPTime();
+	if (Now)
+	{
+		INFO("Set time to %s",ctime(&Now));
+		struct timeval tmNow;
+		tmNow.tv_sec = Now;
+		tmNow.tv_usec = 0;
+		if (settimeofday(&tmNow,0))
+		{
+			ERRTRACE();
+		}
+
+		system("hwclock -w");
+	}
+
 	DataTask  dataProcess(protocol,exp500);
 	ControlTask controlProcess(protocol,exp500);
 
 
 
 	dataProcess.run();
-
-	while(1){sleep(1000);};
 	//controlProcess.doProcess(&controlProcess);
+
+	int fd = ::open("/dev/event0",O_RDONLY );
+	struct input_event event;
+	while(1)
+	{
+		sleep(1);
+		read(fd,&event,sizeof(event));
+		TRACE("value=%d",event.value);
+		TRACE("SHUT DOWN\n");
+		close(fd);
+		system("reboot");
+	};
 
 	return EXIT_SUCCESS;
 }

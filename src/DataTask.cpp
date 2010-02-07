@@ -47,7 +47,9 @@ void* DataTask::doProcess(void* pThis)
 	while(1)
 	{
 		task.protocol.RequestCurrentData(portMP,currentData);
+
 		dataQueue.Push(currentData);
+		DEBUG("data queue:%d",dataQueue.GetSize());
 		if (!task.modem.IsPowerOff())
 		{
 			task.protocol.SendCurrentData(portServer,dataQueue);

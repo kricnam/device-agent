@@ -7,6 +7,7 @@
 
 #include "Protocol.h"
 #include "PacketQueue.h"
+#include "Packet.h"
 #include "MPHealthCheckCmdPacket.h"
 #include "DebugLog.h"
 #include <unistd.h>
@@ -104,6 +105,8 @@ void Protocol::PatrolRest(void)
 	timersub(&tmHealthCheckActive,&tmNow,&tmSleep2);
 	int n1 = tmSleep1.tv_sec*1000000+tmSleep1.tv_usec;
 	int n2 = tmSleep2.tv_sec*1000000+tmSleep2.tv_usec;
+	if (n1 < 0) n1 = 0;
+	if (n2 < 0) n2 = 0;
 	n1 = (n1>n2)?n2:n1;
 	INFO("Sleep %d millisecond",n1/1000);
 	usleep(n1);
@@ -241,6 +244,7 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 	else
 		bInCommunicationError = false;
 
+	DEBUG("Get Data: No.%d",data.GetDataNo());
 	return;
 }
 
@@ -300,6 +304,7 @@ void Protocol::HealthCheck(Channel& dev, Packet& status)
 			bInCommunicationError,bExtCommunicationError);
 	cmd.SendTo(dev);
 	status.ReceiveFrameFrom(dev);
+	DEBUG("Get Status = 0x%08X, DataNo.%d",status.GetStatus(),status.GetDataNo());
 }
 
 void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
@@ -496,6 +501,26 @@ bool Protocol::isTimeForAction(struct timeval & timer)
 	gettimeofday(&tmNow, 0);
 	TRACE("timer:%u  now:%u",timer.tv_sec,tmNow.tv_sec);
 	return !timercmp(&tmNow,&timer,<);
+}
+time_t Protocol::GetMPTime(void)
+{
+	CmdPacket cmdGetTime;
+	Packet timeAnswer;
+	cmdGetTime.SetCommand(cmdWord[GetTime],Machine);
+
+	cmdGetTime.SendTo(devMP);
+	devMP.SetTimeOut(300000);
+	timeAnswer.ReceiveFrameFrom(devMP);
+
+	if (timeAnswer.GetSize())
+	{
+		return timeAnswer.GetMPTime();
+	}
+	else
+	{
+		ERROR("Can not get time from Monitor Post");
+		return 0;
+	}
 }
 
 }

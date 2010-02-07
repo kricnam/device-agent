@@ -11,6 +11,8 @@
 #include <string>
 #include <typeinfo>
 #include <stdio.h>
+#include <arpa/inet.h>
+
 using namespace std;
 namespace bitcomm
 {
@@ -172,9 +174,10 @@ bool Packet::isFrameCRCOK(void)
 		unsigned short crc = CRC16::crc16(~0,
 				(const unsigned char*) (strCache.data()) + 3, strCache.size()
 						- 6);
-		TRACE("CRC calculated = %04x",crc);
+		unsigned short CRC = (((strCache[tail - 2] << 8) & 0xFF00) | (0x00FF & strCache[tail - 1]));
+		TRACE("CRC[%x] calculated = %04x",CRC,crc);
 
-		return crc == (((strCache[tail - 2] << 8) & 0xFF00) | (0x00FF & strCache[tail - 1]));
+		return crc == CRC;
 	}
 	return false;
 }
@@ -229,7 +232,7 @@ unsigned int Packet::GetStatus(void)
 			(struct HealthCheckStatusAnswerFrame*) (GetData());
 	if (strCache.size() > 0)
 	{
-		return pData->nStatus;
+		return ntohl(pData->nStatus);
 	}
 	return 0;
 }
@@ -241,6 +244,28 @@ unsigned short Packet::GetAckNo(void)
 
 	struct AcKFrame *p = (struct AcKFrame*) (GetData());
 	return p->dataNumber;
+}
+
+time_t Packet::GetMPTime(void)
+{
+	if (!strCache.size() )	return 0;
+
+	struct GetTimeFrame *p = (struct GetTimeFrame*) (GetData());
+	if (p->cmd[0] != cmdWord[GetTime][0]||
+		p->cmd[1] != cmdWord[GetTime][1])
+	{
+		ERROR("Not a time frame");
+		return 0;
+	}
+	Dump();
+	struct tm now ={0};
+	now.tm_year = ntohs(p->time.year) - 1900;
+	now.tm_mon = p->time.month - 1;
+	now.tm_mday = p->time.day;
+	now.tm_hour = p->time.hour;
+	now.tm_min = p->time.minute;
+	now.tm_sec = p->second;
+	return mktime(&now);
 }
 
 bool Packet::IsValidAck(void)

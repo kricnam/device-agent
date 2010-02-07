@@ -7,6 +7,7 @@
 
 #include "MPHealthCheckCmdPacket.h"
 #include "CommunicationCommand.h"
+#include <arpa/inet.h>
 namespace bitcomm
 {
 
@@ -16,11 +17,13 @@ MPHealthCheckCmdPacket::MPHealthCheckCmdPacket(unsigned int nStatus,unsigned cha
 	content.cmd[0]=cmdWord[MPHealthCheck][0];
 	content.cmd[1]=cmdWord[MPHealthCheck][1];
 	content.length = 9;
-	content.nStatus = nStatus;
-	if (bIntErr) content.nStatus |= INT_COMM_ERR;
-	else content.nStatus &= ~INT_COMM_ERR;
-	if (bExtErr)content.nStatus |= EXT_COMM_ERR;
-	else content.nStatus &= ~EXT_COMM_ERR;
+
+	if (bIntErr) nStatus |= INT_COMM_ERR;
+	else nStatus &= ~INT_COMM_ERR;
+	if (bExtErr)nStatus |= EXT_COMM_ERR;
+	else nStatus &= ~EXT_COMM_ERR;
+
+	content.nStatus = htonl(nStatus);
 	BuildPacket((const char*)&content,sizeof(content),Machine);
 }
 
