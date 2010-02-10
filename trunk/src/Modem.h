@@ -19,15 +19,22 @@ public:
 	void PowerOff(void);
 	void PowerOn(void);
 	bool IsPowerOff(void);
+	string strAPN;
+	string strUserName;
+	string strIP;
+	string strPassword;
 protected:
 	int UT_PowerOn(void);
-	int WaitATResponse(const char* szWait,bool bClearCache=true);
+	int WaitATResponse(const char* szWait,int timeout=5, bool bClearCache=true);
 	int AttachNet(void);
-	int EstablishIPConnection(void);
-	float GetSignalLevel();
+	int LogonIP(void);
+	int CheckContext(void);
+	int ConnectIP(void);
+	float GetSignalLevel(void);
 	bool bPowerOff;
 	string strCache;
 	TCPPort UT_ATPort;
+
 };
 
 }

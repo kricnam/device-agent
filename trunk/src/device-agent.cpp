@@ -24,16 +24,15 @@ using namespace bitcomm;
 
 void InitPort(void)
 {
-	system("echo 69 > /sys/class/gpio/export;"\
-			"echo 72 > /sys/class/gpio/export;"\
+	int n  = system("echo 72 > /sys/class/gpio/export;"\
 			"echo 79 > /sys/class/gpio/export;"\
 			"echo 81 > /sys/class/gpio/export;"\
 			"echo 85 > /sys/class/gpio/export;"\
-			"echo in > /sys/class/gpio/gpio69/direction;"\
 			"echo in > /sys/class/gpio/gpio72/direction;"\
 			"echo low >/sys/class/gpio/gpio79/direction;"\
 			"echo low >/sys/class/gpio/gpio81/direction;"\
-			"echo in >/sys/class/gpio/gpio85/direction");
+			"echo in > /sys/class/gpio/gpio85/direction");
+	DEBUG("system return %d",n);
 }
 
 
@@ -42,6 +41,11 @@ int main(void) {
 	INFO("Open configure file agent.conf");
 	Config config("./agent.conf");
 	Modem exp500;
+
+	exp500.strAPN = config.GetAPN();
+	exp500.strIP = config.GetIP();
+	exp500.strUserName = config.GetUserName();
+	exp500.strPassword = config.GetPassword();
 
 	Protocol protocol(config.GetServerName().c_str());
 	INFO("Set server as: %s",protocol.GetServerName());
@@ -63,27 +67,40 @@ int main(void) {
 			ERRTRACE();
 		}
 
-		system("hwclock -w");
+		DEBUG("hwclock return %d",system("hwclock -w"));
 	}
 
 	DataTask  dataProcess(protocol,exp500);
 	ControlTask controlProcess(protocol,exp500);
 
-
-
 	dataProcess.run();
-	//controlProcess.doProcess(&controlProcess);
+	controlProcess.run();
 
-	int fd = ::open("/dev/event0",O_RDONLY );
+	int fd = open("/dev/event0",O_RDONLY );
+	if (fd<0)
+	{
+		ERRTRACE();
+		INFO("fail safe, set Power Off OK, return %d",
+				system("echo high >/sys/class/gpio/gpio81/direction;"));
+		while(1)
+		{
+			sleep(60);
+		};
+	}
+
 	struct input_event event;
 	while(1)
 	{
 		sleep(1);
-		read(fd,&event,sizeof(event));
+		if (read(fd,&event,sizeof(event))<0)
+			ERRTRACE();
 		TRACE("value=%d",event.value);
 		TRACE("SHUT DOWN\n");
 		close(fd);
-		system("reboot");
+		if (system("reboot"))
+		{
+			ERRTRACE();
+		}
 	};
 
 	return EXIT_SUCCESS;

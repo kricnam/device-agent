@@ -13,6 +13,7 @@ using namespace std;
 
 namespace bitcomm
 {
+#define CONF_FILENAME "./agent.conf"
 
 class Config
 {
@@ -21,7 +22,12 @@ public:
 	virtual ~Config();
 	string GetServerName();
 	string GetMPdev();
+	string GetAPN();
+	string GetUserName();
+	string GetPassword();
+	string GetIP();
 	int GetMachine();
+	int GetModemDelay();
 protected:
 	string strFileName;
 };

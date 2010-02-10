@@ -36,6 +36,10 @@ int GetValue(const char* szFile,const char *szKey, char *pBuf, int nLen)
 			memset(line,0,1024);
 			memset(szKeyCmp,0,1024);
 			fgets(line, 1024,confFile);
+
+			if (line[0]=='#')
+				continue;
+
 			nLine = strlen(line);
 			if(line[nLine-1]=='\n')
 				nEnd = 1;
@@ -118,4 +122,57 @@ int Config::GetMachine()
 	}
 	return 1;
 }
+
+int Config::GetModemDelay()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"MODEM_DELAY",tmp,1024)==0)
+	{
+		return atoi(tmp);
+	}
+	return 60;
+}
+
+string Config::GetAPN(void)
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"APN",tmp,1024)==0)
+	{
+		return tmp;
+	}
+	return "bgan.inmarsat.com";
+}
+
+string Config::GetIP(void)
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"IP",tmp,1024)==0)
+	{
+		return tmp;
+	}
+	return "";
+}
+
+string Config::GetUserName(void)
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"USERNAME",tmp,1024)==0)
+	{
+		return tmp;
+	}
+	return "";
+}
+
+string Config::GetPassword(void)
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"PASSWORD",tmp,1024)==0)
+	{
+		return tmp;
+	}
+	return "";
+}
+
+
+
 }

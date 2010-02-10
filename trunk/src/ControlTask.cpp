@@ -26,7 +26,7 @@ ControlTask::~ControlTask()
 
 void ControlTask::run(void)
 {
-
+	pthread_create(&pidTask,NULL,ControlTask::doProcess,this);
 }
 
 void* ControlTask::doProcess(void* pThis)

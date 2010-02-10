@@ -10,6 +10,7 @@
 #include "Modem.h"
 #include "SerialPort.h"
 #include "Protocol.h"
+#include "pthread.h"
 namespace bitcomm
 {
 
@@ -24,6 +25,7 @@ protected:
 
 	Protocol& protocol;
 	Modem& modem;
+	pthread_t pidTask;
 
 };
 
