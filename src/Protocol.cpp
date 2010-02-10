@@ -27,6 +27,7 @@ void Protocol::NegoiateDataChannel(TCPPort& port)
 {
 	int retry = 3;
 	int retry_connect = 2;
+	struct timeval tmStart, tmNow, tmDiff;
 	int nPort = negoiateChannel(port, 50001);
 	while (nPort && retry_connect--)
 	{
@@ -34,10 +35,19 @@ void Protocol::NegoiateDataChannel(TCPPort& port)
 		{
 			port.SetRemotePort(nPort);
 			port.SetTimeOut(5000000);
+			gettimeofday(&tmStart, 0);
 			if (port.Connect() > 0)
 			{
 				bExtCommunicationError = false;
 				return;
+			}
+			//sleep
+			gettimeofday(&tmNow, 0);
+			timersub(&tmNow,&tmStart,&tmDiff);
+			if (tmDiff.tv_sec * 1000000 + tmDiff.tv_usec < 5000000)
+			{
+				INFO("Sleep for next try");
+				usleep(5000000 - tmDiff.tv_sec * 1000000 - tmDiff.tv_usec);
 			}
 		};
 		nPort = negoiateChannel(port, 50001);
@@ -52,7 +62,7 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 	int retry_connect = 2;
 
 	int nPort = negoiateChannel(port, 50101);
-	TRACE("Get Port %d",nPort);
+	INFO("Get Port %d",nPort);
 	struct timeval tmStart, tmNow, tmDiff;
 	while (nPort && retry_connect--)
 	{
@@ -71,10 +81,11 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 			//sleep
 			gettimeofday(&tmNow, 0);
 			timersub(&tmNow,&tmStart,&tmDiff);
-			if (tmDiff.tv_usec > 500000)
-				tmDiff.tv_sec++;
-			if (tmDiff.tv_sec < 5)
-				sleep(5 - tmDiff.tv_sec);
+			if (tmDiff.tv_sec*1000000+tmDiff.tv_usec < 5000000 )
+			{
+				INFO("Sleep for next try");
+				usleep(5000000 - tmDiff.tv_sec*1000000-tmDiff.tv_usec);
+			}
 		};
 		nPort = negoiateChannel(port, 50101);
 		retry = 3;

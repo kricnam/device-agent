@@ -12,6 +12,8 @@ namespace bitcomm
 
 Channel::Channel()
 {
+	tmLastAction.tv_sec=0;
+	tmLastAction.tv_usec=0;
 }
 
 Channel::~Channel()

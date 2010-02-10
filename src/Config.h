@@ -26,6 +26,7 @@ public:
 	string GetUserName();
 	string GetPassword();
 	string GetIP();
+	string GetModemIP();
 	int GetMachine();
 	int GetModemDelay();
 protected:

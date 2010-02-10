@@ -175,7 +175,7 @@ bool Packet::isFrameCRCOK(void)
 				(const unsigned char*) (strCache.data()) + 3, strCache.size()
 						- 6);
 		unsigned short CRC = (((strCache[tail - 2] << 8) & 0xFF00) | (0x00FF & strCache[tail - 1]));
-		TRACE("CRC[%x] calculated = %04x",CRC,crc);
+		TRACE("CRC[%04x] calculated = %04x",CRC,crc);
 
 		return crc == CRC;
 	}
