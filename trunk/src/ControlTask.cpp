@@ -43,8 +43,14 @@ void* ControlTask::doProcess(void* pThis)
 		{
 			INFO("Power On Modem");
 			task.modem.PowerOn();
+			if (task.modem.IsPowerOff())
+				task.protocol.SetExtCommunicationError(true);
+			else
+				task.protocol.SetExtCommunicationError(false);
 		}
 
+		if (!task.modem.IsPowerOff())
+		{
 		try
 		{
 			eCmd = task.protocol.GetCommand(port,cmd);
@@ -113,11 +119,13 @@ void* ControlTask::doProcess(void* pThis)
 			}
 
 		}
+		}
 
 		if (task.protocol.IsTimeForSleep())
 		{
 			//Modem Power off
-			task.modem.PowerOff();
+			if (!task.modem.IsPowerOff())
+				task.modem.PowerOff();
 			task.protocol.SleepForPowerOn();
 		}
 

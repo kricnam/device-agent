@@ -20,7 +20,8 @@ namespace bitcomm
 Modem::Modem()
 {
 	bPowerOff = true;
-	UT_ATPort.SetRemoteHost("192.168.1.35");
+	Config config(CONF_FILENAME);
+	UT_ATPort.SetRemoteHost(config.GetModemIP().c_str());
 	UT_ATPort.SetRemotePort(9998);
 }
 
@@ -30,14 +31,19 @@ Modem::~Modem()
 
 void Modem::PowerOn(void)
 {
+	//Modemless test
 	bPowerOff = false;
+	return;
+	///////////////////////////////
+	bPowerOff = true;
 	do
 	{
-		if (system("udhcpc -n -q") == -1)
-		{
-			ERROR("fail to run DHCP client");
-			break;
-		}
+		system("ifconfig eth0 up;sleep 1");
+		//if (system("udhcpc -n -q") == -1)
+		//{
+		//	ERROR("fail to run DHCP client");
+		//	break;
+		//}
 
 		try
 		{
@@ -48,10 +54,11 @@ void Modem::PowerOn(void)
 
 				if (UT_ATPort.Open())
 				{
-					INFO("Connected to AT command port");
-					break;
+					ERROR("fail to connect to UT");
+					continue;
 				}
-				ERROR("fail to connect to UT");
+				INFO("Connected to AT command port");
+				break;
 			} while(--retry);
 			if (retry==0) break;
 
@@ -85,6 +92,7 @@ void Modem::PowerOn(void)
 				break;
 			}
 			//system("udhcpc -n -q");
+			bPowerOff = false;
 			return;
 		}
 		catch(ChannelException& e)
@@ -174,6 +182,7 @@ void Modem::PowerOff(void)
 {
 	INFO("Power off");
 	bPowerOff = true;
+
 	int retry=3;
 	do
 	{

@@ -153,6 +153,16 @@ string Config::GetIP(void)
 	return "";
 }
 
+string Config::GetModemIP(void)
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"MODEM_IP",tmp,1024)==0)
+	{
+		return tmp;
+	}
+	return "192.168.1.35";
+}
+
 string Config::GetUserName(void)
 {
 	char tmp[1024]={0};
