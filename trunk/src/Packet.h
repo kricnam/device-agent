@@ -146,11 +146,13 @@ public:
 	bool IsAck(void);
 	void SetPacket(const char* szBuf,int n);
 	void Ack(bool bAck,char Machine,enum CommunicationCommand eCmd, short nNum=0);
+	void Clear() {strCache.clear();};
 	unsigned short GetDataNo(void);
 	unsigned short GetAckNo(void);
 	unsigned short GetAssignedPort(void);
 	unsigned int GetStatus(void);
 	time_t GetMPTime(void);
+	enum CommunicationCommand FrameCommandType(void);
 
 protected:
 	enum Symbol

@@ -28,8 +28,9 @@ public:
 	virtual int Write(const char* buf,int len) throw(ChannelException);
 	virtual void Lock(void);
 	virtual void Unlock(void);
+	virtual bool IsOpen() {return bConnected;};
 	void SetTimeOut(int n);
-	void Bind(int socket){socketID = socket;};
+	void Bind(int socket){socketID = socket;bConnected = (socket!=-1);};
 	void SetRemoteHost(const char* szHost)
 	{
 		strServerName = szHost;

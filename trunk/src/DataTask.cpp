@@ -57,15 +57,18 @@ void* DataTask::doProcess(void* pThis)
 		DEBUG("data queue:%d",task.dataQueue.GetSize());
 		if (!task.modem.IsPowerOff())
 		{
-			task.protocol.SendCurrentData(portServer,task.dataQueue);
+			task.protocol.SendCurrentData(task.modem,portServer,task.dataQueue);
 		}
-
+		currentData.Clear();
 		task.protocol.HealthCheck(portMP,currentData);
-		if (!task.modem.IsPowerOff())
-		{
-			task.protocol.HealthCheckReport(portServer,currentData);
-		}
+		task.protocol.HealthCheckReport(portServer,currentData);
 
+		if (portServer.IsOpen())
+		{
+			portServer.Close();
+			INFO("Close data port");
+		}
+		currentData.Clear();
 		task.protocol.PatrolRest();
 	};
 

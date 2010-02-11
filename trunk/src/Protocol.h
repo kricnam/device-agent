@@ -13,6 +13,7 @@
 #include "SerialPort.h"
 #include "CommunicationCommand.h"
 #include "HistoryDataRequestCmd.h"
+#include "Modem.h"
 #include <string>
 #include <list>
 #include <sys/time.h>
@@ -40,8 +41,8 @@ public:
 	};
 	virtual ~Protocol();
 	void RequestCurrentData(Channel& port,Packet& data);
-	void SendCurrentData(Channel& port, DataPacketQueue& queue);
-	void NegoiateDataChannel(TCPPort& port);
+	void SendCurrentData(Modem& modem,Channel& port, DataPacketQueue& queue);
+	void NegoiateDataChannel(Modem& modem,TCPPort& port);
 	void NegoiateControlChannel(TCPPort& port);
 	int Sleep();
 	void HealthCheck(Channel& dev,Packet& status);
