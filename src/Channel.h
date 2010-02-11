@@ -40,6 +40,7 @@ public:
 	virtual void Lock()=0;
 	virtual void Unlock()=0;
 	virtual void SetTimeOut(int usec)=0;
+	virtual bool IsOpen()=0;
 	struct timeval & GetActiveTime(){ return tmLastAction;};
 protected:
 	struct timeval tmLastAction;

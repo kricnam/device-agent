@@ -9,6 +9,7 @@
 #define PACKETQUEUE_H_
 #include <list>
 #include "Packet.h"
+#include <pthread.h>
 namespace bitcomm
 {
 
@@ -30,6 +31,7 @@ public:
 
 protected:
 	list<Packet> queue;
+	//pthread_mutex_t mutex;
 };
 
 }

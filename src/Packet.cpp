@@ -59,7 +59,7 @@ void Packet::ReceiveAckFrom(Channel & port)
 		//scan frame start
 		if (strCache.empty())
 		{
-			while (n && (buff != ACK || buff != NAK))
+			while (n && (buff != ACK && buff != NAK))
 			{
 				n = port.Read(&buff, 1);
 			};
@@ -198,7 +198,7 @@ unsigned short Packet::GetDataNo(void)
 		return 0;
 
 	struct DataPacketFrame *pData = (struct DataPacketFrame*) (GetData());
-	return pData->dataNo;
+	return ntohs(pData->dataNo);
 }
 unsigned short Packet::GetAssignedPort(void)
 {
@@ -206,13 +206,13 @@ unsigned short Packet::GetAssignedPort(void)
 		return 0;
 
 	struct PortAssignFrame *pData = (struct PortAssignFrame*) (GetData());
-	return pData->port;
+	return ntohs(pData->port);
 }
 bool Packet::IsAckNo(unsigned short No)
 {
 	struct AcKFrame *p = (struct AcKFrame*) (GetData());
 	return (strCache.size() == sizeof(struct AcKFrame) && p->ack == ACK
-			&& p->dataNumber == No);
+			&& p->dataNumber == htons(No));
 }
 
 bool Packet::IsValidStatus(void)
@@ -243,7 +243,7 @@ unsigned short Packet::GetAckNo(void)
 		return 0;
 
 	struct AcKFrame *p = (struct AcKFrame*) (GetData());
-	return p->dataNumber;
+	return ntohs(p->dataNumber);
 }
 
 time_t Packet::GetMPTime(void)
@@ -283,5 +283,18 @@ void Packet::SetPacket(const char* szBuf,int n)
 	strCache.clear();
 	strCache.append(szBuf,n);
 }
+
+enum CommunicationCommand Packet::FrameCommandType()
+{
+	int eCmd;
+	const char *pCmd = strCache.data()+3;
+	for (eCmd=0;eCmd<CMD_END;eCmd++)
+	{
+		if (pCmd[0]==cmdWord[eCmd][0]&&	pCmd[1]==cmdWord[eCmd][1])
+			return (enum CommunicationCommand)eCmd;
+	}
+	return CMD_END;
+}
+
 
 }//name space end

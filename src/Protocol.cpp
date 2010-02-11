@@ -10,6 +10,7 @@
 #include "Packet.h"
 #include "MPHealthCheckCmdPacket.h"
 #include "DebugLog.h"
+
 #include <unistd.h>
 #include <sys/time.h>
 #include <typeinfo>
@@ -23,12 +24,13 @@ Protocol::~Protocol()
 
 }
 
-void Protocol::NegoiateDataChannel(TCPPort& port)
+void Protocol::NegoiateDataChannel(Modem& modem,TCPPort& port)
 {
 	int retry = 3;
 	int retry_connect = 2;
 	struct timeval tmStart, tmNow, tmDiff;
 	int nPort = negoiateChannel(port, nDataPort);
+	INFO("Get Port %d",nPort);
 	while (nPort && retry_connect--)
 	{
 		while (retry--)
@@ -36,12 +38,14 @@ void Protocol::NegoiateDataChannel(TCPPort& port)
 			port.SetRemotePort(nPort);
 			port.SetTimeOut(5000000);
 			gettimeofday(&tmStart, 0);
-			if (port.Connect() > 0)
+			if (port.Connect() == 0)
 			{
+				INFO("connected");
 				bExtCommunicationError = false;
 				return;
 			}
 			//sleep
+			if (modem.IsPowerOff()) return;
 			gettimeofday(&tmNow, 0);
 			timersub(&tmNow,&tmStart,&tmDiff);
 			if (tmDiff.tv_sec * 1000000 + tmDiff.tv_usec < 5000000)
@@ -50,10 +54,12 @@ void Protocol::NegoiateDataChannel(TCPPort& port)
 				usleep(5000000 - tmDiff.tv_sec * 1000000 - tmDiff.tv_usec);
 			}
 		};
-		nPort = negoiateChannel(port, 50001);
+		if (modem.IsPowerOff()) return;
+		nPort = negoiateChannel(port, nDataPort);
 		retry = 3;
 	};
-	bExtCommunicationError = true;
+	if (!modem.IsPowerOff())
+		bExtCommunicationError = true;
 }
 
 void Protocol::NegoiateControlChannel(TCPPort& port)
@@ -87,7 +93,7 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 				usleep(5000000 - tmDiff.tv_sec*1000000-tmDiff.tv_usec);
 			}
 		};
-		nPort = negoiateChannel(port, 50101);
+		nPort = negoiateChannel(port, nCommandPort);
 		retry = 3;
 	};
 	DEBUG("Set External communication error");
@@ -261,9 +267,10 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 	return;
 }
 
-void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
+void Protocol::SendCurrentData(Modem& modem,Channel& port, DataPacketQueue& queue)
 {
 	int retry = 0;
+
 	while (queue.GetSize())
 	{
 		INFO("Send current data");
@@ -278,29 +285,35 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 		catch (ChannelException& e)
 		{
 			WARNING(e.what());
-			retry++;
+
 			if (e.bUnConnected)
 			{
 				if (typeid(port) == typeid(TCPPort))
 				{
-					NegoiateDataChannel(dynamic_cast<TCPPort&> (port));
+					NegoiateDataChannel(modem,dynamic_cast<TCPPort&> (port));
 				}
 				else
 					port.Open();
-				continue;
+
+				if (bExtCommunicationError) return;
+				else continue;
 			}
+
 		}
 
+		ack.Dump();
 		if (ack.IsAck() && ack.IsAckNo(packet.GetDataNo()))
 		{
+			INFO("Get ACK");
 			queue.Pop();
 			retry = 0;
 		}
 		else
 		{
-			if (retry > 2)
+			if (retry > 3)
 			{
-				bExtCommunicationError = true;
+				if (!modem.IsPowerOff())
+					bExtCommunicationError = true;
 				return;
 			}
 			retry++;
@@ -332,37 +345,41 @@ void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
 			nLastStatus = nNewStatus;
 			statusQueue.Push(statusAnswer);
 			int  retry=0;
-			while(statusQueue.GetSize())
+			if (bExtCommunicationError || !port.IsOpen())
+				INFO("Can not send status now.");
+			else
 			{
-
-				statusAnswer = statusQueue.Front();
-				INFO("Report status 0x%08X",statusAnswer.GetStatus());
-				try
+				while (statusQueue.GetSize())
 				{
+					statusAnswer = statusQueue.Front();
+					INFO("Report status 0x%08X",statusAnswer.GetStatus());
+					try
+					{
 						statusAnswer.SendTo(port);
 						ack.ReceiveAckFrom(port);
-				}
-				catch (ChannelException& e)
-				{
-					retry++;
-					WARNING(e.what());
-				}
-
-				if (ack.IsAck() && ack.IsAckNo(statusAnswer.GetDataNo()))
-				{
+					} catch (ChannelException& e)
+					{
+						retry++;
+						WARNING(e.what());
+					}
+					ack.Dump();
+					if (ack.IsAck() && ack.IsAckNo(statusAnswer.GetDataNo()))
+					{
+						INFO("status accepted");
 						statusQueue.Pop();
 						retry = 0;
-				}
-				else
-				{
-					if (retry > 2)
-					{
-						bExtCommunicationError = true;
-						return;
 					}
-					retry++;
-				}
-			};
+					else
+					{
+						if (retry > 2)
+						{
+							bExtCommunicationError = true;
+							return;
+						}
+						retry++;
+					}
+				};
+			}
 		}
 	}
 }

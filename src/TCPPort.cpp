@@ -127,6 +127,7 @@ int TCPPort::Read(char* buf,int len) throw(ChannelException)
 {
 	TRACE("Reading...");
 	if (!bConnected) throw ChannelException();
+
 	int n = recv(socketID,buf,len,0);
 	TRACE("Read %d byte",n);
 	if (n<0)
@@ -152,6 +153,7 @@ int TCPPort::Read(char* buf,int len) throw(ChannelException)
 int TCPPort::Write(const char* buf,int len) throw(ChannelException)
 {
 	if (!bConnected) throw ChannelException();
+	gettimeofday(&tmLastAction, 0);
 	int n = send(socketID,buf,len,0);
 	if (n<0)
 	{
