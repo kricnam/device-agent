@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "DebugLog.h"
 namespace bitcomm
 {
 int GetValue(const char* szFile,const char *szKey, char *pBuf, int nLen)
@@ -130,7 +131,48 @@ int Config::GetModemDelay()
 	{
 		return atoi(tmp);
 	}
-	return 60;
+	return 5;
+}
+
+int Config::GetPowerOnDelay()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"POWERON_DELAY",tmp,1024)==0)
+	{
+		return atoi(tmp);
+	}
+	return 90;
+}
+
+int Config::GetDataPort()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"DATA_PORT",tmp,1024)==0)
+	{
+		return atoi(tmp);
+	}
+	return 50001;
+}
+
+int Config::GetTraceLevel(void)
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"LOG_LEVEL",tmp,1024)==0)
+	{
+		return atoi(tmp);
+	}
+	return LP_INFO;
+}
+
+
+int Config::GetCommandPort()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"COMMAND_PORT",tmp,1024)==0)
+	{
+		return atoi(tmp);
+	}
+	return 50101;
 }
 
 string Config::GetAPN(void)
@@ -142,6 +184,7 @@ string Config::GetAPN(void)
 	}
 	return "bgan.inmarsat.com";
 }
+
 
 string Config::GetIP(void)
 {
@@ -182,7 +225,5 @@ string Config::GetPassword(void)
 	}
 	return "";
 }
-
-
 
 }

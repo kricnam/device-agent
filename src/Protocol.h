@@ -31,10 +31,12 @@ public:
 		nIntervalSetting = 600;
 		gettimeofday(&tmCurrentDataActive,0);
 		tmHealthCheckActive = tmCurrentDataActive;
+		tmLastActive = tmCurrentDataActive;
 		nLastStatus = 0;
 		bExtCommunicationError = false;
 		bInCommunicationError = false;
-
+		nCommandPort = 50101;
+		nDataPort = 50001;
 	};
 	virtual ~Protocol();
 	void RequestCurrentData(Channel& port,Packet& data);
@@ -52,6 +54,18 @@ public:
 	void SleepForPowerOn(void);
 	void PatrolRest(void);
 	time_t GetMPTime(void);
+	void SaveStatus() { if (statusQueue.GetSize()) statusQueue.Save("./status.data");};
+	void LoadStatus() { statusQueue.Load("./status.data");};
+    void SetCommandPort(int nCommandPort)
+    {
+        this->nCommandPort = nCommandPort;
+    }
+
+    void SetDataPort(int nDataPort)
+    {
+        this->nDataPort = nDataPort;
+    }
+
     bool GetExtCommunicationError()
     {
         return bExtCommunicationError;
@@ -71,6 +85,16 @@ public:
     {
         this->Machine = Machine;
     };
+
+    void SetIdleTimeSecond(int n)
+    {
+    	nIdleTimeSetting = n;
+    };
+
+    void SetIntervalSecond(int n)
+    {
+    	nIntervalSetting = n;
+    }
 
     TCPPort& GetControlPort()
     {
@@ -115,6 +139,8 @@ protected:
 	TCPPort srvData;
 	TCPPort srvControl;
 	DataPacketQueue statusQueue;
+	int nCommandPort;
+	int nDataPort;
 };
 
 }

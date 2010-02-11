@@ -27,8 +27,12 @@ public:
 	string GetPassword();
 	string GetIP();
 	string GetModemIP();
+	int GetDataPort();
+	int GetCommandPort();
 	int GetMachine();
 	int GetModemDelay();
+	int GetTraceLevel();
+	int GetPowerOnDelay();
 protected:
 	string strFileName;
 };

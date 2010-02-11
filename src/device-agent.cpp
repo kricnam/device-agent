@@ -37,9 +37,14 @@ void InitPort(void)
 
 
 int main(void) {
+	Config config("./agent.conf");
+	int n = config.GetTraceLevel();
+
+	SETTRACELEVEL(n);
+
 	InitPort();
 	INFO("Open configure file agent.conf");
-	Config config("./agent.conf");
+
 	Modem exp500;
 
 	exp500.strAPN = config.GetAPN();
@@ -51,7 +56,13 @@ int main(void) {
 	INFO("Set server as: %s",protocol.GetServerName());
 	protocol.SetMachine(config.GetMachine());
 	INFO("Set machine No. as: %d",protocol.GetMachine());
-
+	n = config.GetDataPort();
+	INFO("Set Data Port as: %d",n);
+	protocol.SetDataPort(n);
+	n = config.GetCommandPort();
+	INFO("Set Command Port as: %d",n);
+	protocol.SetCommandPort(n);
+	protocol.LoadStatus();
 	protocol.GetMPPort().Open(config.GetMPdev().c_str());
 
 	INFO("Set system clock...");
@@ -69,6 +80,10 @@ int main(void) {
 
 		DEBUG("hwclock return %d",system("hwclock -w"));
 	}
+
+	n = config.GetPowerOnDelay();
+	INFO("Waiting %d seconds for Monitoring Post self check over...",n);
+	sleep(n);
 
 	DataTask  dataProcess(protocol,exp500);
 	ControlTask controlProcess(protocol,exp500);
@@ -92,11 +107,12 @@ int main(void) {
 	while(1)
 	{
 		sleep(1);
+		INFO("Monitoring Power Off signal...");
 		if (read(fd,&event,sizeof(event))<0)
 			ERRTRACE();
-		TRACE("value=%d",event.value);
 		TRACE("SHUT DOWN\n");
 		close(fd);
+		dataProcess.SaveData();
 		if (system("reboot"))
 		{
 			ERRTRACE();

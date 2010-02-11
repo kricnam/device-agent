@@ -31,6 +31,7 @@ void ControlTask::run(void)
 
 void* ControlTask::doProcess(void* pThis)
 {
+	INFO("Started...");
 	ControlTask& task = *(ControlTask*)pThis;
 	TCPPort& port = task.protocol.GetControlPort();
 	SerialPort& portMP = task.protocol.GetMPPort();

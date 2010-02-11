@@ -23,13 +23,14 @@ public:
 	virtual ~DataTask();
 	void run(void);
 	static void* doProcess(void* pThis);
-
+	void SaveData();
 	Protocol& protocol;
-
+	DataPacketQueue dataQueue;
 protected:
 	Modem& modem;
 	pthread_t pidTask;
 	string strServer;
+
 };
 
 }
