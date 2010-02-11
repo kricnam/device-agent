@@ -13,8 +13,8 @@
 namespace bitcomm
 {
 
-#define INT_COMM_ERR 1<<17
-#define EXT_COMM_ERR 1<<18
+#define INT_COMM_ERR (1<<17)
+#define EXT_COMM_ERR (1<<18)
 
 class MPHealthCheckCmdPacket: public virtual bitcomm::Packet
 {

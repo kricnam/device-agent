@@ -142,7 +142,9 @@ public:
 	bool IsAckNo(unsigned short n);
 	bool IsValidStatus(void);
 	bool IsValidAck(void);
+	bool IsValidFrame(void) { return isFrameCRCOK();};
 	bool IsAck(void);
+	void SetPacket(const char* szBuf,int n);
 	void Ack(bool bAck,char Machine,enum CommunicationCommand eCmd, short nNum=0);
 	unsigned short GetDataNo(void);
 	unsigned short GetAckNo(void);

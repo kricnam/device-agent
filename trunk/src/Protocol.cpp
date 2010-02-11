@@ -28,7 +28,7 @@ void Protocol::NegoiateDataChannel(TCPPort& port)
 	int retry = 3;
 	int retry_connect = 2;
 	struct timeval tmStart, tmNow, tmDiff;
-	int nPort = negoiateChannel(port, 50001);
+	int nPort = negoiateChannel(port, nDataPort);
 	while (nPort && retry_connect--)
 	{
 		while (retry--)
@@ -61,7 +61,7 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 	int retry = 3;
 	int retry_connect = 2;
 
-	int nPort = negoiateChannel(port, 50101);
+	int nPort = negoiateChannel(port, nCommandPort);
 	INFO("Get Port %d",nPort);
 	struct timeval tmStart, tmNow, tmDiff;
 	while (nPort && retry_connect--)
@@ -100,11 +100,13 @@ bool Protocol::IsTimeForSleep(void)
 	struct timeval tmDiff;
 	gettimeofday(&tmNow, 0);
 
+	TRACE("Last ActiveTime %u.%06u",tmLastActive.tv_sec,tmLastActive.tv_usec);
 	setLastActionTime(srvData.GetActiveTime());
 	setLastActionTime(srvControl.GetActiveTime());
-
+	TRACE("Last ActiveTime %u.%06u",tmLastActive.tv_sec,tmLastActive.tv_usec);
+	TRACE("Now time is %u ",tmNow.tv_sec);
 	timersub(&tmNow,&tmLastActive,&tmDiff);
-	INFO("idle time %us [setting:%d]",tmDiff.tv_sec,nIdleTimeSetting);
+	INFO("idle time %u s [setting:%d s]",tmDiff.tv_sec,nIdleTimeSetting);
 	return ((unsigned) tmDiff.tv_sec > (unsigned) nIdleTimeSetting);
 }
 
@@ -264,6 +266,7 @@ void Protocol::SendCurrentData(Channel& port, DataPacketQueue& queue)
 	int retry = 0;
 	while (queue.GetSize())
 	{
+		INFO("Send current data");
 		Packet& packet = queue.Front();
 		Packet ack;
 
@@ -309,7 +312,7 @@ void Protocol::HealthCheck(Channel& dev, Packet& status)
 {
 	if (!isTimeForAction(tmHealthCheckActive))
 		return;
-	TRACE("");
+	INFO("");
 	setReservedTime(tmHealthCheckActive, 30);
 	MPHealthCheckCmdPacket cmd(nLastStatus, Machine,
 			bInCommunicationError,bExtCommunicationError);
@@ -333,6 +336,7 @@ void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
 			{
 
 				statusAnswer = statusQueue.Front();
+				INFO("Report status 0x%08X",statusAnswer.GetStatus());
 				try
 				{
 						statusAnswer.SendTo(port);

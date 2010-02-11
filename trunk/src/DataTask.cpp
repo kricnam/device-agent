@@ -26,6 +26,12 @@ DataTask::~DataTask()
 
 }
 
+void DataTask::SaveData()
+{
+	if (dataQueue.GetSize())
+		dataQueue.Save("./Current.data");
+}
+
 void DataTask::run(void)
 {
 	//Start the thread to read and send data
@@ -37,22 +43,21 @@ void DataTask::run(void)
 
 void* DataTask::doProcess(void* pThis)
 {
-	INFO("started");
+	INFO("Started...");
 	DataTask& task = *(DataTask*)pThis;
 	TCPPort& portServer = task.protocol.GetDataPort();
 	SerialPort& portMP = task.protocol.GetMPPort();
 	Packet currentData;
-	DataPacketQueue dataQueue;
-
+	task.dataQueue.Load("./Current.data");
 	while(1)
 	{
 		task.protocol.RequestCurrentData(portMP,currentData);
 
-		dataQueue.Push(currentData);
-		DEBUG("data queue:%d",dataQueue.GetSize());
+		task.dataQueue.Push(currentData);
+		DEBUG("data queue:%d",task.dataQueue.GetSize());
 		if (!task.modem.IsPowerOff())
 		{
-			task.protocol.SendCurrentData(portServer,dataQueue);
+			task.protocol.SendCurrentData(portServer,task.dataQueue);
 		}
 
 		task.protocol.HealthCheck(portMP,currentData);

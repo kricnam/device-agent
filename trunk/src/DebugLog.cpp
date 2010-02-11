@@ -184,7 +184,7 @@ void TraceLog::Dump(int nLev, const char* szFile, const char* szFunc ,int nLine,
 
 void TraceLog::Trace(int nLev, const char* szFile, const char* szFunc ,int nLine, const char* szFmt, ...)
 {
-	if (nLev <= nLevel)
+	if (nLev < nLevel)
 		return;
 	va_list ap;
 	int n;

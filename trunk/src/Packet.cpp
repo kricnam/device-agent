@@ -278,4 +278,10 @@ bool Packet::IsAck(void)
 	return strCache[0] == ACK;
 }
 
+void Packet::SetPacket(const char* szBuf,int n)
+{
+	strCache.clear();
+	strCache.append(szBuf,n);
+}
+
 }//name space end

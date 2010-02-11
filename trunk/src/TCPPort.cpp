@@ -92,6 +92,8 @@ int TCPPort::Connect()
         if (::connect(socketID, rp->ai_addr, rp->ai_addrlen) != -1)
         {
         	bConnected = true;
+        	gettimeofday(&tmLastAction, 0);
+        	TRACE("Set Action Time: %d ",tmLastAction.tv_sec);
             break;                  /* Success */
         }
         ERRTRACE();

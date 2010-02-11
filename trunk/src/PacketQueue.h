@@ -25,6 +25,8 @@ public:
 	};
 	Packet& Front(void);
 	Packet& GetAt(int i);
+	void Save(const char* szFile);
+	void Load(const char* szFile);
 
 protected:
 	list<Packet> queue;

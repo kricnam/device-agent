@@ -26,12 +26,14 @@ MPHealthCheckCmdPacket::MPHealthCheckCmdPacket(unsigned int nStatus,unsigned cha
 		nStatus |= INT_COMM_ERR;
 	}
 	else nStatus &= ~INT_COMM_ERR;
+
 	if (bExtErr)
 	{
 		TRACE("External Comm Err");
 		nStatus |= EXT_COMM_ERR;
 	}
 	else nStatus &= ~EXT_COMM_ERR;
+
 	TRACE("Status new: %08X",nStatus);
 
 	content.nStatus = htonl(nStatus);
