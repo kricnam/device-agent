@@ -64,7 +64,7 @@ void DataPacketQueue::Pop(void)
 void DataPacketQueue::Save(const char* szFile)
 {
 	INFO("Save to %s",szFile);
-	int fd = open(szFile,O_CREAT|O_WRONLY|O_TRUNC);
+	int fd = open(szFile,O_CREAT|O_WRONLY|O_TRUNC,S_IRWXU);
 	if (fd < 0)
 	{
 		ERRTRACE();
@@ -100,17 +100,17 @@ void DataPacketQueue::Load(const char* szFile)
 		ERRTRACE();
 		return;
 	}
-
+	queue.clear();
 	while(!feof(fd))
 	{
 		int n;
-		if (fread(&n,sizeof(n),1,fd)< sizeof(n))
+		if (fread(&n,sizeof(n),1,fd)< 1)
 			break;
 
 		if (n>0)
 		{
 			char* buf = new char[n];
-			if (buf && (fread(buf,n,1,fd)== (unsigned)n))
+			if (buf && (fread(buf,n,1,fd)== 1))
 			{
 				Packet packet;
 				packet.SetPacket(buf,n);
@@ -120,6 +120,9 @@ void DataPacketQueue::Load(const char* szFile)
 		}
 	}
 	fclose(fd);
+	if (remove(szFile)!=0)
+		ERRTRACE();
+	INFO("Total %d records loaded",queue.size());
 }
 
 }
