@@ -48,8 +48,7 @@ enum CommunicationCommand
 	CMD_END
 };
 
-static const char* cmdWord[]={"ra","wa","ca","cA","cb","cc","cd","ce","cF","cH","cI","cJ",
-"ck","cK","ha","hA","hc","hC","hd","hD","hf","hF","hg","hG","hy","hz","pA","pB","wb",""};
+extern char* cmdWord[];
 
 class Packet {
 public:

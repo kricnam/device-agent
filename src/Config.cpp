@@ -189,7 +189,7 @@ string Config::GetAPN(void)
 string Config::GetIP(void)
 {
 	char tmp[1024]={0};
-	if (GetValue(strFileName.c_str(),"IP",tmp,1024)==0)
+	if (GetValue(strFileName.c_str(),"LOCAL_IP",tmp,1024)==0)
 	{
 		return tmp;
 	}
