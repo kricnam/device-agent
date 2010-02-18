@@ -28,25 +28,29 @@ public:
 	Protocol(const char* szServer)
 	{
 		strServerName = szServer;
-		nIdleTimeSetting = 60;
+		nIdleTimeSetting = 20;
 		nIntervalSetting = 600;
 		gettimeofday(&tmCurrentDataActive,0);
 		tmHealthCheckActive = tmCurrentDataActive;
 		tmLastActive = tmCurrentDataActive;
+		tmSendDataActive = tmCurrentDataActive;
 		nLastStatus = 0;
 		bExtCommunicationError = false;
 		bInCommunicationError = false;
 		nCommandPort = 50101;
 		nDataPort = 50001;
+		nNegotialTimeOut = 20; //seconds
+
+		bControlDone =false;
 	};
 	virtual ~Protocol();
 	void RequestCurrentData(Channel& port,Packet& data);
 	void SendCurrentData(Modem& modem,Channel& port, DataPacketQueue& queue);
-	void NegoiateDataChannel(Modem& modem,TCPPort& port);
+	int NegoiateDataChannel(Modem& modem,TCPPort& port);
 	void NegoiateControlChannel(TCPPort& port);
 	int Sleep();
 	void HealthCheck(Channel& dev,Packet& status);
-	void HealthCheckReport(Channel& port,Packet& status);
+	void HealthCheckReport(Channel& port);
 	enum CommunicationCommand GetCommand(Channel& port,CmdPacket& cmd);
 	void TransferCmd(Channel& dev,Channel& port,CmdPacket& cmd);
 	void HistoryDataTransfer(Channel& dev,Channel& port,HistoryDataRequestCmd& cmd);
@@ -55,6 +59,7 @@ public:
 	void SleepForPowerOn(void);
 	void PatrolRest(void);
 	time_t GetMPTime(void);
+	int GetMPIntervalSecond(void);
 	void SaveStatus() { if (statusQueue.GetSize()) statusQueue.Save("./status.data");};
 	void LoadStatus() { statusQueue.Load("./status.data");};
     void SetCommandPort(int nCommandPort)
@@ -116,6 +121,16 @@ public:
 	{
     	return strServerName.c_str();
 	};
+
+    int GetIdleTime()
+    {
+    	return nIdleTimeSetting;
+    };
+
+    void SetControlDone(bool b)
+    {
+    	bControlDone = b;
+    };
 protected:
 
 	int negoiateChannel(TCPPort& port,int nStartPort);
@@ -128,6 +143,8 @@ protected:
 	};
 	bool bExtCommunicationError;
 	bool bInCommunicationError;
+	bool bControlPre;
+	bool bControlDone;
 	unsigned char Machine;
 	string strServerName;
 	unsigned int nLastStatus;
@@ -136,12 +153,14 @@ protected:
 	struct timeval tmLastActive;
 	struct timeval tmHealthCheckActive;
 	struct timeval tmCurrentDataActive;
+	struct timeval tmSendDataActive;
 	SerialPort devMP;
 	TCPPort srvData;
 	TCPPort srvControl;
 	DataPacketQueue statusQueue;
 	int nCommandPort;
 	int nDataPort;
+	int nNegotialTimeOut;
 };
 
 }

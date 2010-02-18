@@ -131,6 +131,16 @@ public:
 		struct FrameEnd end;
 	} __attribute__ ((packed));
 
+	struct ConditionFrame
+	{
+		struct FrameHead head;
+		char cmd[2];
+		unsigned short length;
+		unsigned char nInterval;
+		unsigned char dummy[26];
+		struct FrameEnd end;
+	}__attribute__ ((packed));
+
 	const char* GetData() {return strCache.data();};
 	int GetSize() 	{return strCache.size();};
 	void Dump();
@@ -150,6 +160,7 @@ public:
 	unsigned short GetAckNo(void);
 	unsigned short GetAssignedPort(void);
 	unsigned int GetStatus(void);
+	int GetInterval(void);
 	time_t GetMPTime(void);
 	enum CommunicationCommand FrameCommandType(void);
 

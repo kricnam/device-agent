@@ -41,35 +41,73 @@ void DataTask::run(void)
 	pthread_create(&pidTask,NULL,DataTask::doProcess,this);
 }
 
+void* DataTask::doReadData(void* pThis)
+{
+	INFO("started");
+	DataTask& task = *(DataTask*)pThis;
+
+	SerialPort& portMP = task.protocol.GetMPPort();
+	Packet currentData;
+	while(1)
+	{
+		task.protocol.RequestCurrentData(portMP,currentData);
+		if (currentData.GetSize())
+		{
+			task.dataQueue.Push(currentData);
+			DEBUG("data queue:%d,ID:%d",task.dataQueue.GetSize(),currentData.GetDataNo());
+			task.SaveData();
+			currentData.Clear();
+		}
+
+
+		task.protocol.HealthCheck(portMP,currentData);
+		currentData.Clear();
+		task.protocol.PatrolRest();
+	};
+	return pThis;
+}
+
 void* DataTask::doProcess(void* pThis)
 {
 	INFO("Started...");
 	DataTask& task = *(DataTask*)pThis;
 	TCPPort& portServer = task.protocol.GetDataPort();
-	SerialPort& portMP = task.protocol.GetMPPort();
+
 	Packet currentData;
 	task.dataQueue.Load("./Current.data");
+	pthread_t pid_read;
+	pthread_create(&pid_read,NULL,DataTask::doReadData,pThis);
+
 	while(1)
 	{
-		task.protocol.RequestCurrentData(portMP,currentData);
 
-		task.dataQueue.Push(currentData);
-		DEBUG("data queue:%d",task.dataQueue.GetSize());
 		if (!task.modem.IsPowerOff())
 		{
-			task.protocol.SendCurrentData(task.modem,portServer,task.dataQueue);
-		}
-		currentData.Clear();
-		task.protocol.HealthCheck(portMP,currentData);
-		task.protocol.HealthCheckReport(portServer,currentData);
+			int nPort = task.protocol.NegoiateDataChannel(task.modem,portServer);
 
-		if (portServer.IsOpen())
-		{
-			portServer.Close();
-			INFO("Close data port");
+			if (nPort!=0 && nPort!=-1)
+			{
+				task.protocol.SendCurrentData(task.modem, portServer,
+						task.dataQueue);
+				task.protocol.HealthCheckReport(portServer);
+
+				if (portServer.IsOpen())
+				{
+					portServer.Close();
+					INFO("Close data port");
+				}
+			}
 		}
-		currentData.Clear();
-		task.protocol.PatrolRest();
+		//INFO("Data Thread");
+		//task.protocol.SleepForPowerOn();
+		while (!task.modem.IsPowerOff())
+		{
+			sleep(10);
+		};
+		while(task.modem.IsPowerOff())
+		{
+			sleep(task.protocol.GetIdleTime()/2);
+		}
 	};
 
 	return pThis;

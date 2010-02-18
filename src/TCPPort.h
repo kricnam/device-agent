@@ -44,6 +44,7 @@ public:
 
 protected:
 
+	int waitConnect();
 	int nPort;
 	string strServerName;
 	int socketID;

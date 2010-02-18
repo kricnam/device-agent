@@ -24,11 +24,17 @@ Protocol::~Protocol()
 
 }
 
-void Protocol::NegoiateDataChannel(Modem& modem,TCPPort& port)
+int Protocol::NegoiateDataChannel(Modem& modem,TCPPort& port)
 {
 	int retry = 3;
-	int retry_connect = 2;
+	int retry_connect = 1;
 	struct timeval tmStart, tmNow, tmDiff;
+	INFO("Waiting for control channel connected...");
+	while (!bControlDone)
+	{
+		sleep(1);
+		if (modem.IsPowerOff()) return 0;
+	};
 	int nPort = negoiateChannel(port, nDataPort);
 	INFO("Get Port %d",nPort);
 	while (nPort && retry_connect--)
@@ -36,37 +42,38 @@ void Protocol::NegoiateDataChannel(Modem& modem,TCPPort& port)
 		while (retry--)
 		{
 			port.SetRemotePort(nPort);
-			port.SetTimeOut(5000000);
+			port.SetTimeOut(nNegotialTimeOut*1000000);
 			gettimeofday(&tmStart, 0);
 			if (port.Connect() == 0)
 			{
 				INFO("connected");
 				bExtCommunicationError = false;
-				return;
+				return nPort;
 			}
 			//sleep
-			if (modem.IsPowerOff()) return;
+			if (modem.IsPowerOff()) return 0;
 			gettimeofday(&tmNow, 0);
 			timersub(&tmNow,&tmStart,&tmDiff);
-			if (tmDiff.tv_sec * 1000000 + tmDiff.tv_usec < 5000000)
+			if (tmDiff.tv_sec * 1000000 + tmDiff.tv_usec < nNegotialTimeOut*1000000)
 			{
 				INFO("Sleep for next try");
-				usleep(5000000 - tmDiff.tv_sec * 1000000 - tmDiff.tv_usec);
+				usleep(nNegotialTimeOut*1000000 - tmDiff.tv_sec * 1000000 - tmDiff.tv_usec);
 			}
 		};
-		if (modem.IsPowerOff()) return;
+		if (modem.IsPowerOff()) return 0;
 		nPort = negoiateChannel(port, nDataPort);
 		retry = 3;
 	};
 	if (!modem.IsPowerOff())
 		bExtCommunicationError = true;
+
+	return -1;
 }
 
 void Protocol::NegoiateControlChannel(TCPPort& port)
 {
 	int retry = 3;
-	int retry_connect = 2;
-
+	int retry_connect = 1;
 	int nPort = negoiateChannel(port, nCommandPort);
 	INFO("Get Port %d",nPort);
 	struct timeval tmStart, tmNow, tmDiff;
@@ -75,22 +82,23 @@ void Protocol::NegoiateControlChannel(TCPPort& port)
 		while (retry--)
 		{
 			port.SetRemotePort(nPort);
-			port.SetTimeOut(5000000);
+			port.SetTimeOut(nNegotialTimeOut*1000000);
 			gettimeofday(&tmStart, 0);
 			if (port.Connect() == 0)
 			{
-				TRACE("connected");
+				INFO("connected");
 				bExtCommunicationError = false;
+				bControlDone = true;
 				return;
 			}
 
 			//sleep
 			gettimeofday(&tmNow, 0);
 			timersub(&tmNow,&tmStart,&tmDiff);
-			if (tmDiff.tv_sec*1000000+tmDiff.tv_usec < 5000000 )
+			if (tmDiff.tv_sec*1000000+tmDiff.tv_usec < nNegotialTimeOut*1000000 )
 			{
 				INFO("Sleep for next try");
-				usleep(5000000 - tmDiff.tv_sec*1000000-tmDiff.tv_usec);
+				usleep(nNegotialTimeOut*1000000 - tmDiff.tv_sec*1000000-tmDiff.tv_usec);
 			}
 		};
 		nPort = negoiateChannel(port, nCommandPort);
@@ -148,44 +156,38 @@ int Protocol::negoiateChannel(TCPPort& port, int nStartPort)
 	int start_port = nStartPort;
 	int retry = 0;
 	int retry_data = 0;
+	struct timeval tmStart,tmNow,tmDiff;
 
 	do
 	{
 		TRACE("port=%d",start_port);
+		gettimeofday(&tmStart,0);
 		if (port.Open(strServerName.c_str(), start_port) < 0)
 		{
+			gettimeofday(&tmNow,0);
 			retry++;
 			TRACE("Retry %d",retry);
-			if (retry == 18)
+			if (retry == 6)
 				break;
-			if (retry % 6 == 0)
-			{
-				TRACE("Waiting 30s");
-				sleep(30);
-				if (start_port == nStartPort)
-					start_port++;
-				else
-					start_port = nStartPort;
-			}
-			else if (retry % 3 == 0)
+
+			if (retry % 3 == 0)
 			{
 				if (start_port == nStartPort)
 					start_port++;
 				else
 					start_port = nStartPort;
 			}
-			else
-			{
-				TRACE("Waiting 5s");
-				sleep(5);
-			}
+
+			timersub(&tmNow,&tmStart,&tmDiff);
+			int uSleep = tmDiff.tv_sec*1000000 + tmDiff.tv_usec;
+			if (uSleep>0) usleep(uSleep);
 			TRACE("retry next time");
 			continue;
 		};
 
 		INFO("port opened, waiting command...");
 		CmdPacket cmd;
-		port.SetTimeOut(5000000);
+		port.SetTimeOut(20000000);
 		try
 		{
 			cmd.ReceiveFrameFrom(port);
@@ -231,7 +233,40 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 {
 	if (!isTimeForAction(tmCurrentDataActive))
 		return;
-	setReservedTime(tmCurrentDataActive, 10 * 60);
+
+	time_t nowMP = GetMPTime();
+	time_t nowLocal;
+
+	if (nowMP && time(&nowLocal)!=-1)
+	{
+		int dt;
+		if (nowMP > nowLocal)
+			dt = nowMP -nowLocal;
+		else
+			dt = nowLocal - nowMP;
+		if (dt > 5)
+		{
+			struct timeval tmNow;
+			tmNow.tv_sec = nowMP;
+			tmNow.tv_usec = 0;
+			if (settimeofday(&tmNow,0))
+			{
+				ERRTRACE();
+			}
+		}
+	}
+
+	if (nowMP && nowMP < tmCurrentDataActive.tv_sec)
+	{
+		int dt = tmCurrentDataActive.tv_sec - nowMP;
+		if (dt > 0 && dt < 10 ) sleep(dt+1);
+	}
+
+	int nIntervalSecond = GetMPIntervalSecond();
+	DEBUG("Set data interval %d",nIntervalSecond);
+	if (nIntervalSecond==0) nIntervalSecond = 120;
+	setReservedTime(tmCurrentDataActive,nIntervalSecond);
+
 	INFO("request current data");
 
 	CmdPacket request;
@@ -239,20 +274,21 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 	request.SetCommand(cmdWord[DataRequest], Machine);
 	port.SetTimeOut(1000000);
 	port.Lock();
+
 	do
-	{
-		try
 		{
-			request.SendTo(port);
-			data.ReceiveFrameFrom(port);
-			if (data.GetSize())
-				break;
-		} catch (ChannelException& e)
-		{
+			try
+			{
+				request.SendTo(port);
+				data.ReceiveFrameFrom(port);
+				if (data.GetSize())
+					break;
+			}
+			catch (ChannelException& e)
+			{
 
-		}
-	} while (--retry);
-
+			}
+		} while (--retry);
 	port.Unlock();
 
 	if (!retry && !data.GetSize())
@@ -270,12 +306,13 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 void Protocol::SendCurrentData(Modem& modem,Channel& port, DataPacketQueue& queue)
 {
 	int retry = 0;
-
+	setReservedTime(tmSendDataActive,nIntervalSetting);
 	while (queue.GetSize())
 	{
-		INFO("Send current data");
 		Packet& packet = queue.Front();
 		Packet ack;
+
+		INFO("Send current data[%d]",packet.GetDataNo());
 
 		try
 		{
@@ -290,21 +327,24 @@ void Protocol::SendCurrentData(Modem& modem,Channel& port, DataPacketQueue& queu
 			{
 				if (typeid(port) == typeid(TCPPort))
 				{
-					NegoiateDataChannel(modem,dynamic_cast<TCPPort&> (port));
+					if (NegoiateDataChannel(modem,dynamic_cast<TCPPort&> (port))==0)
+						return;
 				}
 				else
 					port.Open();
 
 				if (bExtCommunicationError) return;
+				if (modem.IsPowerOff()) return;
 				else continue;
 			}
 
 		}
 
+		if (modem.IsPowerOff()) return;
 		ack.Dump();
 		if (ack.IsAck() && ack.IsAckNo(packet.GetDataNo()))
 		{
-			INFO("Get ACK");
+			INFO("Get ACK[%d]",ack.GetAckNo());
 			queue.Pop();
 			retry = 0;
 		}
@@ -332,27 +372,30 @@ void Protocol::HealthCheck(Channel& dev, Packet& status)
 	cmd.SendTo(dev);
 	status.ReceiveFrameFrom(dev);
 	DEBUG("Get Status = 0x%08X, DataNo.%d",status.GetStatus(),status.GetDataNo());
-}
-
-void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
-{
-	if (statusAnswer.IsValidStatus())
+	if (status.IsValidStatus())
 	{
-		unsigned int nNewStatus = statusAnswer.GetStatus();
+		unsigned int nNewStatus = status.GetStatus();
 		if (nNewStatus != nLastStatus)
 		{
-			Packet ack;
 			nLastStatus = nNewStatus;
-			statusQueue.Push(statusAnswer);
-			int  retry=0;
-			if (bExtCommunicationError || !port.IsOpen())
+			statusQueue.Push(status);
+		}
+	}
+}
+
+void Protocol::HealthCheckReport(Channel & port)
+{
+	Packet ack;
+	int retry = 0;
+	if (bExtCommunicationError || !port.IsOpen())
 				INFO("Can not send status now.");
-			else
-			{
-				while (statusQueue.GetSize())
+	else
+	{
+		while (statusQueue.GetSize())
 				{
-					statusAnswer = statusQueue.Front();
+					Packet statusAnswer = statusQueue.Front();
 					INFO("Report status 0x%08X",statusAnswer.GetStatus());
+					ack.Clear();
 					try
 					{
 						statusAnswer.SendTo(port);
@@ -380,8 +423,6 @@ void Protocol::HealthCheckReport(Channel & port, Packet& statusAnswer)
 					}
 				};
 			}
-		}
-	}
 }
 
 enum CommunicationCommand Protocol::GetCommand(Channel& port, CmdPacket& cmd)
@@ -534,6 +575,7 @@ bool Protocol::isTimeForAction(struct timeval & timer)
 	TRACE("timer:%u  now:%u",timer.tv_sec,tmNow.tv_sec);
 	return !timercmp(&tmNow,&timer,<);
 }
+
 time_t Protocol::GetMPTime(void)
 {
 	CmdPacket cmdGetTime;
@@ -552,6 +594,27 @@ time_t Protocol::GetMPTime(void)
 	{
 		ERROR("Can not get time from Monitor Post");
 		return 0;
+	}
+}
+
+int Protocol::GetMPIntervalSecond(void)
+{
+	CmdPacket cmdGetTime;
+	Packet timeAnswer;
+	cmdGetTime.SetCommand(cmdWord[GetCondition],Machine);
+
+	cmdGetTime.SendTo(devMP);
+	devMP.SetTimeOut(300000);
+	timeAnswer.ReceiveFrameFrom(devMP);
+
+	if (timeAnswer.GetSize())
+	{
+		return timeAnswer.GetInterval()*60;
+	}
+	else
+	{
+		ERROR("Can not get time from Monitor Post");
+		return 120;
 	}
 }
 

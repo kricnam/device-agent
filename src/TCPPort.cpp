@@ -6,6 +6,10 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <unistd.h>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -20,7 +24,7 @@ TCPPort::TCPPort()
 	nPort = 0;
 	socketID = -1;
 	bConnected = false;
-	timeout = 10000000;
+	timeout = 20000000;
 }
 
 TCPPort::~TCPPort()
@@ -49,13 +53,51 @@ int TCPPort::Open(const char* szServer,int nPort)
 
 	return Connect();
 }
+int TCPPort::waitConnect()
+{
+    fd_set rfds;
+    struct timeval tv;
+    int retval;
+
+    /* Watch stdin (fd 0) to see when it has input. */
+    FD_ZERO(&rfds);
+    FD_SET(socketID, &rfds);
+
+    /* Wait up to 200 seconds. */
+    tv.tv_sec = 20;
+    tv.tv_usec = 0;
+
+    retval = select(socketID+1, NULL,&rfds,  NULL, &tv);
+    /* Don't rely on the value of tv now! */
+
+    if (retval == -1)
+    {
+        ERRTRACE()
+        return -1;
+    }
+    int error = 0;
+    socklen_t len=sizeof(error);
+    if (getsockopt(socketID,SOL_SOCKET,SO_ERROR,&error,&len)<0)
+    {
+    	ERRTRACE();
+    	return -1;
+    }
+
+    if (error)
+    {
+    	INFO("connection failed:%d",error);
+    	return -1;
+    }
+
+    return 0;
+}
 
 int TCPPort::Connect()
 {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     int s;
-
+    gettimeofday(&tmLastAction, 0);
     /* Obtain address(es) matching host/port */
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
@@ -92,10 +134,17 @@ int TCPPort::Connect()
         if (::connect(socketID, rp->ai_addr, rp->ai_addrlen) != -1)
         {
         	bConnected = true;
-        	gettimeofday(&tmLastAction, 0);
-        	TRACE("Set Action Time: %d ",tmLastAction.tv_sec);
             break;                  /* Success */
         }
+
+        //if (errno == EINPROGRESS)
+        //{
+        //    if (waitConnect()!=-1)
+        //    {
+        //    	bConnected = true;
+        //        break;                  /* Success */
+        //    }
+        //}
         ERRTRACE();
         close(socketID);
         socketID = -1;
@@ -107,6 +156,7 @@ int TCPPort::Connect()
         return -1;
     }
 
+    gettimeofday(&tmLastAction, 0);
     freeaddrinfo(result);           /* No longer needed */
     if (!bConnected) return -1;
     return 0;
@@ -114,6 +164,7 @@ int TCPPort::Connect()
 
 void TCPPort::Close()
 {
+	gettimeofday(&tmLastAction, 0);
 	if (socketID>0)
 	{
 		shutdown(socketID,SHUT_RDWR);

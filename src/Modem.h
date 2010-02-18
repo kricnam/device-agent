@@ -30,8 +30,13 @@ protected:
 	int LogonIP(void);
 	int CheckContext(void);
 	int ConnectIP(void);
+	int OpenSignalLevel();
+	int CloseSignalLevel();
+	int CheckSignalLevel();
+	void UT_Reset();
 	float GetSignalLevel(void);
 	bool bPowerOff;
+	bool bModemOpen;
 	string strCache;
 	TCPPort UT_ATPort;
 
