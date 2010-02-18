@@ -13,6 +13,7 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <linux/input.h>
+#include <sys/wait.h>
 #include "DataTask.h"
 #include "ControlTask.h"
 #include "SerialPort.h"
@@ -36,14 +37,17 @@ void InitPort(void)
 }
 
 
-int main(void) {
+int main_work(void) {
+	INFO("Open configure file agent.conf");
 	Config config("./agent.conf");
 	int n = config.GetTraceLevel();
 
 	SETTRACELEVEL(n);
-
+	n = config.GetPowerOnDelay();
+	INFO("Waiting %d seconds for Monitoring Post self check over...",n);
+	sleep(n);
+	system("ifconfig eth0 up;sleep 1;route add default gw 192.168.1.35 ");
 	InitPort();
-	INFO("Open configure file agent.conf");
 
 	Modem exp500;
 
@@ -81,9 +85,6 @@ int main(void) {
 		DEBUG("hwclock return %d",system("hwclock -w"));
 	}
 
-	n = config.GetPowerOnDelay();
-	INFO("Waiting %d seconds for Monitoring Post self check over...",n);
-	sleep(n);
 
 	DataTask  dataProcess(protocol,exp500);
 	ControlTask controlProcess(protocol,exp500);
@@ -121,3 +122,27 @@ int main(void) {
 
 	return EXIT_SUCCESS;
 }
+
+
+int main()
+{
+        while(1)
+        {
+                pid_t child = fork();
+
+                if (child == 0)
+                {
+                        return main_work();
+                }
+
+                if (child == -1)
+                        puts("fail to create working child" );
+                else
+                {
+                        waitpid(child,NULL,0);
+                        puts("App Working process exit");
+                }
+        }
+        return -1;
+}
+

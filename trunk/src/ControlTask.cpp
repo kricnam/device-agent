@@ -122,14 +122,18 @@ void* ControlTask::doProcess(void* pThis)
 		}
 		}
 
+		sleep(1);
 		if (task.protocol.IsTimeForSleep())
 		{
 			//Modem Power off
+			task.protocol.SetControlDone(false);
+			port.Close();
+
+			sleep(task.protocol.GetIdleTime());
 			if (!task.modem.IsPowerOff())
 				task.modem.PowerOff();
 			task.protocol.SleepForPowerOn();
 		}
-
 
 	};
 	return pThis;

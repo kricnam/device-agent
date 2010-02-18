@@ -57,7 +57,7 @@ void Packet::ReceiveAckFrom(Channel & port)
 	int n = port.Read(&buff, 1);
 	if (n == 0)
 		return;
-
+	port.SetTimeOut(10000000);
 	do
 	{
 		//scan frame start
@@ -204,6 +204,16 @@ unsigned short Packet::GetDataNo(void)
 	struct DataPacketFrame *pData = (struct DataPacketFrame*) (GetData());
 	return ntohs(pData->dataNo);
 }
+
+int Packet::GetInterval(void)
+{
+	if (strCache.size() < 1)
+		return 0;
+
+	struct ConditionFrame *pData = (struct ConditionFrame*) (GetData());
+	return (int)(pData->nInterval);
+}
+
 unsigned short Packet::GetAssignedPort(void)
 {
 	if (strCache.size() < 1)
@@ -215,8 +225,9 @@ unsigned short Packet::GetAssignedPort(void)
 bool Packet::IsAckNo(unsigned short No)
 {
 	struct AcKFrame *p = (struct AcKFrame*) (GetData());
-	return (strCache.size() == sizeof(struct AcKFrame) && p->ack == ACK
-			&& p->dataNumber == htons(No));
+	//return (strCache.size() == sizeof(struct AcKFrame) && p->ack == ACK
+	//		&& p->dataNumber == htons(No));
+	return (p->ack == ACK && p->dataNumber == htons(No));
 }
 
 bool Packet::IsValidStatus(void)

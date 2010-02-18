@@ -23,6 +23,7 @@ public:
 	virtual ~DataTask();
 	void run(void);
 	static void* doProcess(void* pThis);
+	static void* doReadData(void* pThis);
 	void SaveData();
 	Protocol& protocol;
 	DataPacketQueue dataQueue;

@@ -131,7 +131,7 @@ int Config::GetModemDelay()
 	{
 		return atoi(tmp);
 	}
-	return 5;
+	return 60;
 }
 
 int Config::GetPowerOnDelay()
@@ -214,6 +214,26 @@ string Config::GetUserName(void)
 		return tmp;
 	}
 	return "";
+}
+
+float Config::GetMinSignalLevel()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"MIN_SIGNAL",tmp,1024)==0)
+	{
+		return (float)atoi(tmp);
+	}
+	return (float)45;
+}
+
+int Config::SetIntervalSecond()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"INTERVAL",tmp,1024)==0)
+	{
+		return atoi(tmp);
+	}
+	return 600;
 }
 
 string Config::GetPassword(void)

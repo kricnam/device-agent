@@ -12,21 +12,26 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "DebugLog.h"
+
 namespace bitcomm
 {
 
 DataPacketQueue::DataPacketQueue()
 {
+	if (pthread_mutex_init(&mutex,NULL)!=0)
 
+		ERRTRACE()
 }
 
 DataPacketQueue::~DataPacketQueue()
 {
-
+	pthread_mutex_destroy(&mutex);
 }
 
 void DataPacketQueue::Push(Packet& data)
 {
+	pthread_mutex_lock(&mutex);
 	TRACE("data[%d]",data.GetSize());
 	if (data.GetSize())
 	{
@@ -34,10 +39,14 @@ void DataPacketQueue::Push(Packet& data)
 		for(it = queue.begin();it!=queue.end();it++)
 		{
 			if ((*it).GetDataNo() == data.GetDataNo())
+			{
+				pthread_mutex_unlock(&mutex);
 				return;
+			}
 		}
 		queue.push_back(data);
 	}
+	pthread_mutex_unlock(&mutex);
 }
 
 Packet& DataPacketQueue::Front(void)
@@ -58,7 +67,9 @@ Packet& DataPacketQueue::GetAt(int i)
 
 void DataPacketQueue::Pop(void)
 {
+	pthread_mutex_lock(&mutex);
 	queue.pop_front();
+	pthread_mutex_unlock(&mutex);
 }
 
 void DataPacketQueue::Save(const char* szFile)
@@ -70,6 +81,7 @@ void DataPacketQueue::Save(const char* szFile)
 		ERRTRACE();
 		return;
 	}
+	pthread_mutex_lock(&mutex);
 	list<Packet>::iterator it;
 	for(it = queue.begin();it!=queue.end();it++)
 	{
@@ -89,6 +101,7 @@ void DataPacketQueue::Save(const char* szFile)
 		}
 	}
 	close(fd);
+	pthread_mutex_unlock(&mutex);
 }
 
 void DataPacketQueue::Load(const char* szFile)
@@ -120,8 +133,8 @@ void DataPacketQueue::Load(const char* szFile)
 		}
 	}
 	fclose(fd);
-	if (remove(szFile)!=0)
-		ERRTRACE();
+	//if (remove(szFile)!=0)
+	//	ERRTRACE();
 	INFO("Total %d records loaded",queue.size());
 }
 
