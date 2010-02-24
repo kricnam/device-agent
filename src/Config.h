@@ -33,7 +33,7 @@ public:
 	int GetModemDelay();
 	int GetTraceLevel();
 	int GetPowerOnDelay();
-	int SetIntervalSecond();
+	int GetIntervalSecond();
 	float GetMinSignalLevel();
 protected:
 	string strFileName;
