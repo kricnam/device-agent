@@ -66,6 +66,11 @@ int main_work(void) {
 	n = config.GetCommandPort();
 	INFO("Set Command Port as: %d",n);
 	protocol.SetCommandPort(n);
+
+	n = config.GetIntervalSecond();
+	INFO("Set interval time as: %d second",n);
+	protocol.SetIntervalSecond(n);
+
 	protocol.LoadStatus();
 	protocol.GetMPPort().Open(config.GetMPdev().c_str());
 

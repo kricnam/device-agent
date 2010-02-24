@@ -226,7 +226,7 @@ float Config::GetMinSignalLevel()
 	return (float)45;
 }
 
-int Config::SetIntervalSecond()
+int Config::GetIntervalSecond()
 {
 	char tmp[1024]={0};
 	if (GetValue(strFileName.c_str(),"INTERVAL",tmp,1024)==0)
