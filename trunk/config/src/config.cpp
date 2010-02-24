@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "../../device-agent/src/Config.h"
+#include "../../src/Config.h"
 using namespace std;
 using namespace bitcomm;
 
