@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "../../src/Config.h"
+#include "../../device-agent/src/Config.h"
 using namespace std;
 using namespace bitcomm;
 
@@ -103,6 +103,9 @@ int main() {
 	outItem("DATA_PORT",conf.GetDataPort(),cDef.GetDataPort(), "TCP port for data transmit");
 	outItem("COMMAND_PORT",conf.GetCommandPort(),cDef.GetCommandPort(), "TCP port for control command");
 	outItem("INTERVAL",conf.GetIntervalSecond(),cDef.GetIntervalSecond(), "communication interval in seconds");
+	outItem("POWERON_DELAY", conf.GetPowerOnDelay(), cDef.GetPowerOnDelay(),
+					"waiting seconds for MP self test");
+	outItem("LOG_LEVEL",conf.GetTraceLevel(),cDef.GetTraceLevel(), "log message detail level, 0-9, 0 for more, 9 for less detail");
 
 	outItem("MP_PORT", conf.GetMPdev().c_str(), cDef.GetMPdev().c_str(),
 			"device file name for MP");
@@ -118,11 +121,10 @@ int main() {
 	outItem("PASSWORD", conf.GetPassword().c_str(), cDef.GetPassword().c_str(),
 			"access password");
 	outItem("MODEM_DELAY", conf.GetModemDelay(), cDef.GetModemDelay(),
-			"modem at command response waiting second");
+			"modem AT command response waiting second");
 	outItem("MIN_SINGAL", conf.GetMinSignalLevel(), cDef.GetMinSignalLevel(),
 			"minimum satellite signal level");
-	outItem("POWERON_DELAY", conf.GetPowerOnDelay(), cDef.GetPowerOnDelay(),
-				"waiting seconds for MP self test");
+
 
 	cout << "</device_agent_config>" << endl;
 
@@ -162,6 +164,8 @@ void save_config(const char* szBuf)
 		print_config(fp,"DATA_PORT",cDef.GetDataPort(), "TCP port for data transmit");
 		print_config(fp,"COMMAND_PORT",cDef.GetCommandPort(), "TCP port for control command port");
 		print_config(fp,"INTERVAL",cDef.GetIntervalSecond(), "communication interval in seconds");
+		print_config(fp,"POWERON_DELAY", cDef.GetPowerOnDelay(),"waiting second for MP self test");
+		print_config(fp,"LOG_LEVEL",cDef.GetTraceLevel(), "log message detail level, 0-9, 0 for more, 9 for less detail");
 		print_config(fp,"MP_PORT",cDef.GetMPdev().c_str(),"device file name for MP");
 		print_config(fp,"MACHINE",cDef.GetMachine(), "Part No. of  MP");
 		print_config(fp,"APN", cDef.GetAPN().c_str(), "satellite access APN");
@@ -171,7 +175,7 @@ void save_config(const char* szBuf)
 		print_config(fp,"PASSWORD", cDef.GetPassword().c_str(),"access password");
 		print_config(fp,"MODEM_DELAY",cDef.GetModemDelay(),"modem AT command response waiting second");
 		print_config(fp,"MIN_SINGAL",cDef.GetMinSignalLevel(),"minimum satellite signal level");
-		print_config(fp,"POWERON_DELAY", cDef.GetPowerOnDelay(),"waiting second for MP self test");
+
 		fclose(fp);
 		time_t now;
 		time(&now);
@@ -192,7 +196,10 @@ void outItem(const char* szName,const char* szVal,const char* szDefault,const ch
 	cout << "<item>" << endl;
 	cout << "<key>" << szName << "</key>" << endl;
 	cout << "<value>" << szVal << "</value>" << endl;
-	cout << "<default>" << szDefault << "</default>" << endl;
+	if (strlen(szDefault)>0)
+		cout << "<default>" << szDefault << "</default>" << endl;
+	else
+		cout << "<default>" << "-" << "</default>" << endl;
 	cout << "<descript>" << szDesc << "</descript>" << endl;
 	cout << "</item>" << endl;
 }

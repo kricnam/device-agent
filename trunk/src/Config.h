@@ -34,6 +34,7 @@ public:
 	int GetTraceLevel();
 	int GetPowerOnDelay();
 	int GetIntervalSecond();
+	int GetIdelSecond();
 	float GetMinSignalLevel();
 protected:
 	string strFileName;
