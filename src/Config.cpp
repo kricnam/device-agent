@@ -236,6 +236,16 @@ int Config::GetIntervalSecond()
 	return 600;
 }
 
+int Config::GetIdelSecond()
+{
+	char tmp[1024]={0};
+	if (GetValue(strFileName.c_str(),"IDELTIME",tmp,1024)==0)
+	{
+		return atoi(tmp);
+	}
+	return 20;
+}
+
 string Config::GetPassword(void)
 {
 	char tmp[1024]={0};
