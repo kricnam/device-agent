@@ -34,6 +34,7 @@ void Modem::PowerOn(void)
 {
 	///////////////////////////////
 	bPowerOff = true;
+	bool bSkipOff = false;
 
 	do
 	{
@@ -67,6 +68,14 @@ void Modem::PowerOn(void)
 					break;
 				}
 
+				if (!bSkipOff)
+				{
+					TRACE("Send AT+IPOINT=0");
+					UT_ATPort.Write("AT+IPOINT=0\r\n", 14);
+					WaitATResponse("OK", 10);
+				}
+
+
 				if (!UT_PowerOn())
 				{
 					ERROR("fail to active  UT");
@@ -94,21 +103,18 @@ void Modem::PowerOn(void)
 			}
 			else
 			{
-				if (!CheckSignalLevel())
-				{
-					ERROR("Signal level too low");
-					break;
-				}
 
 				if (!CheckContext())
 				{
 					ERROR("fail to check context:%s",strCache.c_str());
 					UT_ATPort.Close();
 					bModemOpen = false;
+					bSkipOff = true;
 					continue;
 				}
 			}
 
+			sleep(3);
 			if (!ConnectIP())
 			{
 				ERROR("fail to connect:%s ",strCache.c_str());
@@ -123,20 +129,16 @@ void Modem::PowerOn(void)
 		catch (ChannelException& e)
 		{
 			ERROR(e.what());
-			bModemOpen = false;
-			UT_ATPort.Close();
 		}
 		break;
 	} while (1);
+ONERROR:
 
-	if (strCache.find("CME ERROR")!=string::npos)
-	{
-		UT_Reset();
-		bModemOpen = false;
-		return;
-	}
+	UT_Reset();
+	UT_ATPort.Close();
 
-	PowerOff();
+	bModemOpen = false;
+
 	return;
 }
 
@@ -234,7 +236,7 @@ void Modem::PowerOff(void)
 	INFO("Modem disconnect");
 	bPowerOff = true;
 //return;
-	int retry=3;
+	int retry=5;
 	do
 	{
 		try
