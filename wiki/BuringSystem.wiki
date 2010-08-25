@@ -1,4 +1,4 @@
-Howto burning system image
+#summary Howto burning system image
 
 = Step by step =
 
