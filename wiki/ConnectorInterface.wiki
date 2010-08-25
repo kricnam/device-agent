@@ -1,5 +1,5 @@
+#summary Present the relationship between hardware and software
 #labels Phase-Design,Phase-Implementation
-Present the relationship between hardware and software
 
 <wiki:toc max_depth="1" />
 
