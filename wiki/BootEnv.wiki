@@ -1,4 +1,4 @@
-# U-boot env setup
+#summary U-boot env setup
 
 = Boot env settings = 
  * bootcmd=cp.b 0xC0042000 0x20400000 0x300000; bootm 0x20400000
