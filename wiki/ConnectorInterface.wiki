@@ -1,7 +1,7 @@
 #summary Present the relationship between hardware and software
 #labels Phase-Design,Phase-Implementation
 
-<wiki:toc max_depth="1" />
+*<wiki:toc max_depth="1" />*
 
 ---
   * the signal level for all the connector:
