@@ -35,8 +35,8 @@ protected:
 	int CheckSignalLevel();
 	void UT_Reset();
 	float GetSignalLevel(void);
-	bool bPowerOff;
-	bool bModemOpen;
+	bool bPowerOff; //logical device if available
+	bool bModemOpen;//outside physical device if opened
 	string strCache;
 	TCPPort UT_ATPort;
 

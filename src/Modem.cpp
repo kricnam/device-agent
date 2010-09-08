@@ -34,33 +34,37 @@ void Modem::PowerOn(void)
 {
 	///////////////////////////////
 	bPowerOff = true;
-	bool bSkipOff = false;
+	bool bModemOnSkip = false;
+
+	int retry = 3;
+	do
+	{
+		if (UT_ATPort.Open())
+		{
+			ERROR("fail to connect to UT");
+			sleep(2);
+			continue;
+		}
+		INFO("Connected to AT command port");
+		break;
+	} while (--retry);
+
+	if (retry == 0)
+		return;
 
 	do
 	{
-		int retry = 3;
-		do
-		{
-			if (UT_ATPort.Open())
-			{
-				ERROR("fail to connect to UT");
-				continue;
-			}
-			INFO("Connected to AT command port");
-			break;
-		} while (--retry);
-
-		if (retry == 0)
-			break;
-
 		try
 		{
 			if (!bModemOpen)
 			{
-				sleep(5);
-				TRACE("Check AT Port, and disable echo back");
-				UT_ATPort.Write("ATE0\r\n", 6);
-				WaitATResponse("OK", 10);
+				if (!bModemOnSkip)
+				{
+					sleep(5);
+					TRACE("Check AT Port, and disable echo back");
+					UT_ATPort.Write("ATE0\r\n", 6);
+					WaitATResponse("OK", 5);
+				}
 
 				if (!CheckSignalLevel())
 				{
@@ -68,38 +72,30 @@ void Modem::PowerOn(void)
 					break;
 				}
 
-				if (!bSkipOff)
+				if (bModemOnSkip || !CheckContext())
 				{
-					TRACE("Send AT+IPOINT=0");
-					UT_ATPort.Write("AT+IPOINT=0\r\n", 14);
-					WaitATResponse("OK", 10);
+					if (!UT_PowerOn())
+					{
+						ERROR("fail to active  UT");
+						break;
+					}
+					if (!AttachNet())
+					{
+						ERROR("Attach fail:%s",strCache.c_str());
+						break;
+					}
+					if (!LogonIP())
+					{
+						ERROR("fail to set context:%s",strCache.c_str());
+						break;
+					}
+					if (!CheckContext())
+					{
+						ERROR("fail to check context:%s",strCache.c_str());
+						break;
+					}
 				}
 
-
-				if (!UT_PowerOn())
-				{
-					ERROR("fail to active  UT");
-					break;
-				}
-
-				if (!AttachNet())
-				{
-					ERROR("Attach fail:%s",strCache.c_str());
-					break;
-				}
-
-				if (!LogonIP())
-				{
-					ERROR("fail to set context:%s",strCache.c_str());
-					break;
-				}
-
-				if (!CheckContext())
-				{
-					ERROR("fail to check context:%s",strCache.c_str());
-					break;
-				}
-				bModemOpen = true;
 			}
 			else
 			{
@@ -109,20 +105,23 @@ void Modem::PowerOn(void)
 					ERROR("fail to check context:%s",strCache.c_str());
 					UT_ATPort.Close();
 					bModemOpen = false;
-					bSkipOff = true;
+					bModemOnSkip = true;
+					INFO("Modem reconnecting...");
 					continue;
 				}
 			}
 
-			sleep(3);
+			sleep(5);
 			if (!ConnectIP())
 			{
 				ERROR("fail to connect:%s ",strCache.c_str());
 				break;
 			}
 
+			bModemOpen = true;
+
 			UT_ATPort.Close();
-			sleep(5);
+
 			bPowerOff = false;
 			return;
 		}
@@ -132,7 +131,8 @@ void Modem::PowerOn(void)
 		}
 		break;
 	} while (1);
-ONERROR:
+
+//ONERROR:
 
 	UT_Reset();
 	UT_ATPort.Close();
@@ -186,7 +186,7 @@ int Modem::CheckContext(void)
 		strCache.clear();
 		if (WaitATResponse("OK",waitTime))
 		{
-			if (strCache.find(config.GetAPN())!=string::npos
+			if (strCache.find(config.GetUserName())!=string::npos
 					&& strCache.find(config.GetIP())!=string::npos)
 			return 1;
 		}
@@ -235,7 +235,7 @@ void Modem::PowerOff(void)
 {
 	INFO("Modem disconnect");
 	bPowerOff = true;
-//return;
+
 	int retry=5;
 	do
 	{
@@ -281,6 +281,8 @@ int Modem::WaitATResponse(const char *szWait, int timeout,bool bClear)
 			}
 			if (strCache.find(szWait) != string::npos)
 				return 1;
+			if (strCache.find("ERROR:")!=string::npos)
+				return 0;
 		} catch (ChannelException& e)
 		{
 			ERROR("%s",e.what());
@@ -345,29 +347,33 @@ int Modem::CloseSignalLevel()
 
 int Modem::CheckSignalLevel()
 {
-	int retry=3;
 	Config config("./agent.conf");
 	float minSIG = config.GetMinSignalLevel();
+	int maxCheckTime = config.GetModemDelay();
 	int ret = 0;
-
+    INFO("Checking signal level...");
 	if (!OpenSignalLevel())
 	{
 		return 0;
 	}
 
+	struct timeval now, start, diff;
+	gettimeofday(&start, 0);
+
 	do
 	{
-		if (!(GetSignalLevel() < minSIG) &&
-				!(GetSignalLevel() < minSIG) &&
-				!(GetSignalLevel() < minSIG))
+		if (!(GetSignalLevel() < minSIG))
 		{
 			ret = 1;
 			break;
 		}
 		else
 			strCache.clear();
-	}while(--retry);
 
+		gettimeofday(&now, 0);
+		timersub(&now,&start,&diff);
+
+	}while(diff.tv_sec < maxCheckTime);
 
 	if (!CloseSignalLevel())
 	{
@@ -379,13 +385,17 @@ int Modem::CheckSignalLevel()
 
 float Modem::GetSignalLevel(void)
 {
-	if (WaitATResponse("_ISIG:", false))
+	if (WaitATResponse("_ISIG:", 10,false))
 	{
-		string::size_type pos = strCache.find("_ISIG:");
-		string::size_type end = strCache.find("\n", pos + 6);
-		string Level = strCache.substr(pos + 6, end);
-		strCache.erase(0, end);
-		return atof(Level.c_str());
+		if (WaitATResponse("\n", 1,false))
+		{
+			string::size_type pos = strCache.find("_ISIG:");
+			string::size_type end = strCache.find("\n", pos + 6);
+			string Level = strCache.substr(pos + 6, end);
+			strCache.erase(0, end);
+			INFO("Get Signal level:%s",Level.c_str());
+			return atof(Level.c_str());
+		}
 	}
 	return 0.0;
 }
