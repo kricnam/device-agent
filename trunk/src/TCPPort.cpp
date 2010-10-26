@@ -165,10 +165,12 @@ int TCPPort::Connect()
 void TCPPort::Close()
 {
 	gettimeofday(&tmLastAction, 0);
+
 	if (socketID>0)
 	{
 		shutdown(socketID,SHUT_RDWR);
 		close(socketID);
+		DEBUG("%s:%d closed",strServerName.c_str(),nPort);
 		socketID = -1;
 		bConnected = false;
 	}
@@ -176,11 +178,11 @@ void TCPPort::Close()
 
 int TCPPort::Read(char* buf,int len) throw(ChannelException)
 {
-	TRACE("Reading...");
+	TRACE("Reading from %s:%d ...",strServerName.c_str(),nPort);
 	if (!bConnected) throw ChannelException();
 
 	int n = recv(socketID,buf,len,0);
-	TRACE("Read %d byte",n);
+	TRACE("Read from %s:%d  [%d] bytes",strServerName.c_str(),nPort,n);
 	if (n<0)
 	{
 		int err = errno;
@@ -205,6 +207,7 @@ int TCPPort::Write(const char* buf,int len) throw(ChannelException)
 {
 	if (!bConnected) throw ChannelException();
 	gettimeofday(&tmLastAction, 0);
+	TRACE("send to %s:%d  [%d] bytes",strServerName.c_str(),nPort,len);
 	int n = send(socketID,buf,len,0);
 	if (n<0)
 	{
