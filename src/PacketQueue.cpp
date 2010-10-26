@@ -120,7 +120,7 @@ void DataPacketQueue::Load(const char* szFile)
 		if (fread(&n,sizeof(n),1,fd)< 1)
 			break;
 
-		if (n>0)
+		if (n>0 && n < 8000)
 		{
 			char* buf = new char[n];
 			if (buf && (fread(buf,n,1,fd)== 1))
