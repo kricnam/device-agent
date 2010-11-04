@@ -281,6 +281,14 @@ void Protocol::RequestCurrentData(Channel& port, Packet& data)
 			{
 				request.SendTo(port);
 				data.ReceiveFrameFrom(port);
+
+				//avoid the former answer messed with  this one
+				// if not the right answer ,read again
+				if (data.GetData() && data.FrameCommandType()!= DataRequest)
+				{
+					data.ReceiveFrameFrom(port);
+				}
+
 				if (data.GetSize())
 					break;
 			}
@@ -604,7 +612,7 @@ int Protocol::GetMPIntervalSecond(void)
 	cmdGetTime.SetCommand(cmdWord[GetCondition],Machine);
 
 	cmdGetTime.SendTo(devMP);
-	devMP.SetTimeOut(300000);
+	devMP.SetTimeOut(10000000);
 	timeAnswer.ReceiveFrameFrom(devMP);
 
 	if (timeAnswer.GetSize())

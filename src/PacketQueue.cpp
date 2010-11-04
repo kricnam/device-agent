@@ -32,7 +32,7 @@ DataPacketQueue::~DataPacketQueue()
 void DataPacketQueue::Push(Packet& data)
 {
 	pthread_mutex_lock(&mutex);
-	TRACE("data[%d]",data.GetSize());
+	TRACE("data[%d],size %d",data.GetDataNo(),data.GetSize());
 	if (data.GetSize())
 	{
 		list<Packet>::iterator it;
@@ -120,16 +120,30 @@ void DataPacketQueue::Load(const char* szFile)
 		if (fread(&n,sizeof(n),1,fd)< 1)
 			break;
 
-		if (n>0 && n < 8000)
+		if (n>0 && n < 5000)
 		{
 			char* buf = new char[n];
 			if (buf && (fread(buf,n,1,fd)== 1))
 			{
 				Packet packet;
 				packet.SetPacket(buf,n);
+
 				if (packet.IsValidFrame()) Push(packet);
+				else
+				{
+					WARNING("Invalid data");
+					packet.Dump();
+				}
+			}
+			else
+			{
+				WARNING("Invalid data,file maybe corrupted.");
 			}
 			if (buf) delete buf;
+		}
+		else
+		{
+			WARNING("Corrupted data, move to next");
 		}
 	}
 	fclose(fd);

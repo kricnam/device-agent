@@ -303,10 +303,13 @@ enum CommunicationCommand Packet::FrameCommandType()
 {
 	int eCmd;
 	const char *pCmd = strCache.data()+3;
-	for (eCmd=0;eCmd<CMD_END;eCmd++)
+	if (GetSize() > 4)
 	{
-		if (pCmd[0]==cmdWord[eCmd][0]&&	pCmd[1]==cmdWord[eCmd][1])
-			return (enum CommunicationCommand)eCmd;
+		for (eCmd = 0; eCmd < CMD_END; eCmd++)
+		{
+			if (pCmd[0] == cmdWord[eCmd][0] && pCmd[1] == cmdWord[eCmd][1])
+				return (enum CommunicationCommand) eCmd;
+		}
 	}
 	return CMD_END;
 }
