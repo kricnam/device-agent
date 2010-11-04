@@ -322,6 +322,13 @@ void Protocol::SendCurrentData(Modem& modem,Channel& port, DataPacketQueue& queu
 
 		INFO("Send current data[%d]",packet.GetDataNo());
 
+		if (packet.FrameCommandType()!=DataRequest)
+		{
+			ERROR("not a [ra]  data,droped");
+			queue.Pop();
+			continue;
+		}
+
 		try
 		{
 			port.Write(packet.GetData(), sizeof(struct Packet::DataPacketFrame));
