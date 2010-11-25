@@ -145,7 +145,9 @@ int main()
                 else
                 {
                         waitpid(child,NULL,0);
-                        puts("App Working process exit");
+                        puts("App Working process exit,Restart after 10 second");
+                        sleep(10);
+                        system("reboot")
                 }
         }
         return -1;

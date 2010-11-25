@@ -37,24 +37,25 @@ void Modem::PowerOn(void)
 	bool bModemOnSkip = false;
 
 	int retry = 3;
-	do
+
+	try
 	{
-		if (UT_ATPort.Open())
+		do
 		{
-			ERROR("fail to connect to UT");
-			sleep(2);
-			continue;
-		}
-		INFO("Connected to AT command port");
-		break;
-	} while (--retry);
+			if (UT_ATPort.Open())
+			{
+				ERROR("fail to connect to UT");
+				sleep(2);
+				continue;
+			}
+			INFO("Connected to AT command port");
+			break;
+		} while (--retry);
 
-	if (retry == 0)
-		return;
+		if (retry == 0)
+			return;
 
-	do
-	{
-		try
+		do
 		{
 			if (!bModemOpen)
 			{
@@ -124,22 +125,20 @@ void Modem::PowerOn(void)
 
 			bPowerOff = false;
 			return;
-		}
-		catch (ChannelException& e)
-		{
-			ERROR(e.what());
-		}
-		break;
-	} while (1);
+		} while (1);
 
-//ONERROR:
-
-	UT_Reset();
-	UT_ATPort.Close();
-
-	bModemOpen = false;
-
-	return;
+		//ONERROR:
+		UT_Reset();
+		UT_ATPort.Close();
+		bModemOpen = false;
+		return;
+	} catch (ChannelException& e)
+	{
+		ERROR(e.what());
+		bModemOpen = false;
+		UT_ATPort.Close();
+		return;
+	}
 }
 
 void Modem::UT_Reset()
@@ -270,8 +269,6 @@ int Modem::WaitATResponse(const char *szWait, int timeout,bool bClear)
 	gettimeofday(&start, 0);
 	do
 	{
-		try
-		{
 			int n = UT_ATPort.Read(buf, 256);
 			if (n > 0)
 			{
@@ -283,12 +280,8 @@ int Modem::WaitATResponse(const char *szWait, int timeout,bool bClear)
 				return 1;
 			if (strCache.find("ERROR:")!=string::npos)
 				return 0;
-		} catch (ChannelException& e)
-		{
-			ERROR("%s",e.what());
-			return 0;
-		}
-		gettimeofday(&now, 0);
+
+			gettimeofday(&now, 0);
 		timersub(&now,&start,&diff);
 		if (diff.tv_sec > timeout)
 			return 0;
