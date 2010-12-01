@@ -25,11 +25,11 @@ using namespace bitcomm;
 
 void InitPort(void)
 {
-	int n  = system("echo 72 > /sys/class/gpio/export;"\
-			"echo 79 > /sys/class/gpio/export;"\
+	//echo 72 > /sys/class/gpio/export;"
+	//"echo in > /sys/class/gpio/gpio72/direction;"
+	int n  = system("echo 79 > /sys/class/gpio/export;"\
 			"echo 81 > /sys/class/gpio/export;"\
 			"echo 85 > /sys/class/gpio/export;"\
-			"echo in > /sys/class/gpio/gpio72/direction;"\
 			"echo low >/sys/class/gpio/gpio79/direction;"\
 			"echo low >/sys/class/gpio/gpio81/direction;"\
 			"echo in > /sys/class/gpio/gpio85/direction");
@@ -46,6 +46,7 @@ int check_shutdown()
 		ERRTRACE();
 	}
 	close(fd);
+	INFO("read shutdown value: %s",c);
 	return atoi(c);
 }
 
@@ -55,11 +56,11 @@ int main_work(void) {
 	int n = config.GetTraceLevel();
 
 	SETTRACELEVEL(n);
-	n = config.GetPowerOnDelay();
-	INFO("Waiting %d seconds for Monitoring Post self check over...",n);
-	sleep(n);
-	system("ifconfig eth0 up;sleep 1;route add default gw 192.168.1.35 ");
+	int nDelay = config.GetPowerOnDelay();
+	InitPort();
+	system("echo high >/sys/class/gpio/gpio81/direction;");//Enable Power off
 
+	system("ifconfig eth0 up;sleep 1;route add default gw 192.168.1.35 ");
 
 	Modem exp500;
 
@@ -88,6 +89,13 @@ int main_work(void) {
 
 	INFO("Set system clock...");
 	time_t Now = protocol.GetMPTime();
+	if (!Now)
+	{
+		INFO("Waiting %d seconds for Monitoring Post self check over...",nDelay);
+		sleep(nDelay);
+		Now = protocol.GetMPTime();//try again
+	}
+
 	if (Now)
 	{
 		INFO("Set time to %s",ctime(&Now));
@@ -110,6 +118,7 @@ int main_work(void) {
 	controlProcess.run();
 
 	int fd = open("/dev/event0",O_RDONLY );
+	system("echo low >/sys/class/gpio/gpio81/direction;");//Disable Power off
 	if (fd<0)
 	{
 		ERRTRACE();
@@ -124,20 +133,30 @@ int main_work(void) {
 	struct input_event event;
 	while(1)
 	{
-		sleep(1);
 		INFO("Monitoring Power Off signal...");
-		if (check_shutdown() == 0)
+		if (read(fd, &event, sizeof(event)) < 0)
 		{
-			if (read(fd, &event, sizeof(event)) < 0)
 				ERRTRACE();
+				INFO("fail safe, set Power Off OK, return %d",
+								system("echo high >/sys/class/gpio/gpio81/direction;"));
+				close(fd);
+				while(1)
+						{
+							sleep(60);
+						};
+		}
+		DEBUG("event %d,%d,%d",event.type,event.code,event.value);
+		if (event.type == EV_KEY && event.code == BTN_0 && event.value == 0)
+		{
 			TRACE("SHUT DOWN\n");
 			close(fd);
-		}
-		dataProcess.SaveData();
-		if (system("reboot"))
-		{
-			ERRTRACE();
-			return -1;
+			dataProcess.SaveData();
+			if (system("reboot"))
+			{
+				ERRTRACE();
+				return -1;
+			}
+			break;
 		}
 	};
 
@@ -146,7 +165,6 @@ int main_work(void) {
 
 int main()
 {
-	InitPort();
     while (1)
 	{
 		pid_t child = fork();
@@ -161,11 +179,7 @@ int main()
 		else
 		{
 			waitpid(child, NULL, 0);
-			if (!check_shutdown())
-			{
-				INFO("App Working process exit,Restart after 10 second");
-				sleep(10);
-			}
+			INFO("App Working process exit,Restart after 10 second");
 			system("reboot");
 			return 0;
 		}
