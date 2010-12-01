@@ -36,6 +36,18 @@ void InitPort(void)
 	DEBUG("system return %d",n);
 }
 
+int check_shutdown()
+{
+	int fd = open("/sys/class/gpio/gpio72/value",O_RDONLY );
+	if (fd<0) return 0;
+	char c[2]={0};
+	if (read(fd,c,1)<1)
+	{
+		ERRTRACE();
+	}
+	close(fd);
+	return atoi(c);
+}
 
 int main_work(void) {
 	INFO("Open configure file agent.conf");
@@ -47,7 +59,7 @@ int main_work(void) {
 	INFO("Waiting %d seconds for Monitoring Post self check over...",n);
 	sleep(n);
 	system("ifconfig eth0 up;sleep 1;route add default gw 192.168.1.35 ");
-	InitPort();
+
 
 	Modem exp500;
 
@@ -114,43 +126,50 @@ int main_work(void) {
 	{
 		sleep(1);
 		INFO("Monitoring Power Off signal...");
-		if (read(fd,&event,sizeof(event))<0)
-			ERRTRACE();
-		TRACE("SHUT DOWN\n");
-		close(fd);
+		if (check_shutdown() == 0)
+		{
+			if (read(fd, &event, sizeof(event)) < 0)
+				ERRTRACE();
+			TRACE("SHUT DOWN\n");
+			close(fd);
+		}
 		dataProcess.SaveData();
 		if (system("reboot"))
 		{
 			ERRTRACE();
+			return -1;
 		}
 	};
 
 	return EXIT_SUCCESS;
 }
 
-
 int main()
 {
-        while(1)
-        {
-                pid_t child = fork();
+	InitPort();
+    while (1)
+	{
+		pid_t child = fork();
 
-                if (child == 0)
-                {
-                        return main_work();
-                }
+		if (child == 0)
+		{
+			return main_work();
+		}
 
-                if (child == -1)
-                        ERROR("fail to create working child" );
-                else
-                {
-                        waitpid(child,NULL,0);
-                        INFO("App Working process exit,Restart after 10 second");
-                        sleep(10);
-                        system("reboot");
-						   return 0;
-                }
-        }
-        return -1;
+		if (child == -1)
+			ERROR("fail to create working child" );
+		else
+		{
+			waitpid(child, NULL, 0);
+			if (!check_shutdown())
+			{
+				INFO("App Working process exit,Restart after 10 second");
+				sleep(10);
+			}
+			system("reboot");
+			return 0;
+		}
+	}
+	return -1;
 }
 
