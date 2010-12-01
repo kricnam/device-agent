@@ -598,7 +598,7 @@ time_t Protocol::GetMPTime(void)
 	cmdGetTime.SetCommand(cmdWord[GetTime],Machine);
 
 	cmdGetTime.SendTo(devMP);
-	devMP.SetTimeOut(300000);
+	devMP.SetTimeOut(3000000);
 	timeAnswer.ReceiveFrameFrom(devMP);
 
 	if (timeAnswer.GetSize())
