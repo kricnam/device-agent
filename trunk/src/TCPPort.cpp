@@ -198,7 +198,11 @@ int TCPPort::Read(char* buf,int len) throw(ChannelException)
 			throw excp;
 		}
 	}
-	if (n==0) Close();
+	if (n==0)
+	{
+		ERRTRACE();
+		Close();
+	}
 	gettimeofday(&tmLastAction, 0);
 	return n;
 }
