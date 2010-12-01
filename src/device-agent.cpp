@@ -141,13 +141,14 @@ int main()
                 }
 
                 if (child == -1)
-                        puts("fail to create working child" );
+                        ERROR("fail to create working child" );
                 else
                 {
                         waitpid(child,NULL,0);
-                        puts("App Working process exit,Restart after 10 second");
+                        INFO("App Working process exit,Restart after 10 second");
                         sleep(10);
-                        system("reboot")
+                        system("reboot");
+						   return 0;
                 }
         }
         return -1;
