@@ -145,8 +145,8 @@ int main_work(void) {
 							sleep(60);
 						};
 		}
-		DEBUG("event %d,%d,%d",event.type,event.code,event.value);
-		if (event.type == EV_KEY && event.code == BTN_0 && event.value == 0)
+		INFO("event %d,%d,%d",event.type,event.code,event.value);
+		if ( 1 )//|| event.type == EV_KEY && event.code == BTN_0)
 		{
 			TRACE("SHUT DOWN\n");
 			close(fd);
