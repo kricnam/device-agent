@@ -75,6 +75,12 @@ void Modem::PowerOn(void)
 
 				if (bModemOnSkip || !CheckContext())
 				{
+//					if (!CheckSignalLevel())
+//					{
+//						ERROR("Signal level too low");
+//						break;
+//					}
+
 					if (!UT_PowerOn())
 					{
 						ERROR("fail to active  UT");
@@ -111,8 +117,13 @@ void Modem::PowerOn(void)
 					continue;
 				}
 			}
-
 			sleep(5);
+			if (!CheckSignalLevel())
+			{
+				ERROR("Signal level too low");
+				break;
+			}
+
 			if (!ConnectIP())
 			{
 				ERROR("fail to connect:%s ",strCache.c_str());
