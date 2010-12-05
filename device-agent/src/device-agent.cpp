@@ -146,7 +146,7 @@ int main_work(void) {
 						};
 		}
 		INFO("event %d,%d,%d",event.type,event.code,event.value);
-		if ( 1 )//|| event.type == EV_KEY && event.code == BTN_0)
+		if ( event.type == EV_KEY && event.code == BTN_0)
 		{
 			TRACE("SHUT DOWN\n");
 			close(fd);
