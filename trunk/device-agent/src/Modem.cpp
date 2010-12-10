@@ -34,7 +34,8 @@ void Modem::PowerOn(void)
 {
 	///////////////////////////////
 	bPowerOff = true;
-	bool bModemOnSkip = false;
+	bool bModemOnFirstTime = true;
+	bool bOpenContext = true;
 
 	int retry = 3;
 
@@ -44,7 +45,7 @@ void Modem::PowerOn(void)
 		{
 			if (UT_ATPort.Open())
 			{
-				ERROR("fail to connect to UT");
+				ERROR("fail to connect to Unit SABRE1");
 				sleep(2);
 				continue;
 			}
@@ -55,13 +56,13 @@ void Modem::PowerOn(void)
 		if (retry == 0)
 			return;
 
+		sleep(5);
 		do
 		{
 			if (!bModemOpen)
 			{
-				if (!bModemOnSkip)
+				if (bModemOnFirstTime)
 				{
-					sleep(5);
 					TRACE("Check AT Port, and disable echo back");
 					UT_ATPort.Write("ATE0\r\n", 6);
 					WaitATResponse("OK", 5);
@@ -73,17 +74,27 @@ void Modem::PowerOn(void)
 					break;
 				}
 
-				if (bModemOnSkip || !CheckContext())
+				if (bModemOnFirstTime)
 				{
-//					if (!CheckSignalLevel())
-//					{
-//						ERROR("Signal level too low");
-//						break;
-//					}
+					 if (!CheckContext())
+					 {
+						if (!CheckSignalLevel())
+						{
+							ERROR("Signal level too low");
+							break;
+						}
+					 }
+					 else
+					 {
+						 bOpenContext = false;
+					 }
+				}
 
+				if (bOpenContext)
+				{
 					if (!UT_PowerOn())
 					{
-						ERROR("fail to active  UT");
+						ERROR("fail to active  Unit SABRE1");
 						break;
 					}
 					if (!AttachNet())
@@ -103,6 +114,11 @@ void Modem::PowerOn(void)
 					}
 				}
 
+				if (!CheckSignalLevel())
+				{
+					ERROR("Signal level too low");
+					break;
+				}
 			}
 			else
 			{
@@ -110,20 +126,15 @@ void Modem::PowerOn(void)
 				if (!CheckContext())
 				{
 					ERROR("fail to check context:%s",strCache.c_str());
-					UT_ATPort.Close();
+					//UT_ATPort.Close();
 					bModemOpen = false;
-					bModemOnSkip = true;
+					bModemOnFirstTime = false;
 					INFO("Modem reconnecting...");
 					continue;
 				}
 			}
-			sleep(5);
-			if (!CheckSignalLevel())
-			{
-				ERROR("Signal level too low");
-				break;
-			}
 
+			sleep(5);
 			if (!ConnectIP())
 			{
 				ERROR("fail to connect:%s ",strCache.c_str());
@@ -186,7 +197,7 @@ int Modem::CheckContext(void)
 {
 	int retry=3;
 	Config config(CONF_FILENAME);
-	int waitTime = config.GetModemDelay();
+	int waitTime = 5;//config.GetModemDelay();
 
 	sleep(1);
 	do
@@ -197,8 +208,10 @@ int Modem::CheckContext(void)
 		if (WaitATResponse("OK",waitTime))
 		{
 			if (strCache.find(config.GetUserName())!=string::npos
-					&& strCache.find(config.GetIP())!=string::npos)
-			return 1;
+					&& strCache.find(config.GetIP()) != string::npos)
+				return 1;
+			else
+				return 0;
 		}
 	}while(--retry);
 	return 0;
@@ -215,6 +228,8 @@ int Modem::ConnectIP(void)
 		UT_ATPort.Write("AT_IAPPPCONNECT=1,10\r\n",22);
 		if (WaitATResponse("OK",config.GetModemDelay(),true))
 			return 1;
+		if (strCache.find("ERROR:")!=string::npos)
+			return 0;
 	}while(--retry);
 	return 0;
 }
@@ -303,7 +318,7 @@ int Modem::AttachNet()
 {
 	int retry=3;
 	Config config("./agent.conf");
-	int waitTime = config.GetModemDelay();
+	int waitTime = 5;//config.GetModemDelay();
 
 	do
 	{
