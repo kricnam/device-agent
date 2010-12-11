@@ -61,6 +61,7 @@ void Modem::PowerOn(void)
 		{
 			if (!bModemOpen)
 			{
+				TRACE("Modem first time routine...");
 				if (bModemOnFirstTime)
 				{
 					TRACE("Check AT Port, and disable echo back");
@@ -86,12 +87,14 @@ void Modem::PowerOn(void)
 					 }
 					 else
 					 {
+						 TRACE("context already exist skip open process");
 						 bOpenContext = false;
 					 }
 				}
 
 				if (bOpenContext)
 				{
+					TRACE("start to build connection context");
 					if (!UT_PowerOn())
 					{
 						ERROR("fail to active  Unit SABRE1");
@@ -122,7 +125,7 @@ void Modem::PowerOn(void)
 			}
 			else
 			{
-
+				TRACE("Modem second time routine...");
 				if (!CheckContext())
 				{
 					ERROR("fail to check context:%s",strCache.c_str());
