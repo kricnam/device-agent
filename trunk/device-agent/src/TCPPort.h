@@ -41,6 +41,7 @@ public:
 	};
 	int Connect();
 	void Close();
+	bool IsUnReachable(void) { return nNoRoute > 0;};
 
 protected:
 
@@ -50,6 +51,7 @@ protected:
 	int socketID;
 	bool bConnected;
 	int timeout;
+	int nNoRoute;
 
 };
 }
