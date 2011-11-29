@@ -25,6 +25,7 @@ TCPPort::TCPPort()
 	socketID = -1;
 	bConnected = false;
 	timeout = 20000000;
+	nNoRoute = 0;
 }
 
 TCPPort::~TCPPort()
@@ -53,6 +54,7 @@ int TCPPort::Open(const char* szServer,int nPort)
 
 	return Connect();
 }
+
 int TCPPort::waitConnect()
 {
     fd_set rfds;
@@ -134,17 +136,12 @@ int TCPPort::Connect()
         if (::connect(socketID, rp->ai_addr, rp->ai_addrlen) != -1)
         {
         	bConnected = true;
+        	nNoRoute = 0;
             break;                  /* Success */
         }
 
-        //if (errno == EINPROGRESS)
-        //{
-        //    if (waitConnect()!=-1)
-        //    {
-        //    	bConnected = true;
-        //        break;                  /* Success */
-        //    }
-        //}
+        if (errno == EHOSTUNREACH || errno == ENETUNREACH)
+        	nNoRoute++;
         ERRTRACE();
         close(socketID);
         socketID = -1;

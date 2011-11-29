@@ -10,6 +10,7 @@
 #include "Protocol.h"
 #include "TCPPort.h"
 #include "DebugLog.h"
+#include <stdlib.h>
 
 namespace bitcomm
 {
@@ -32,13 +33,13 @@ void ControlTask::run(void)
 void* ControlTask::doProcess(void* pThis)
 {
 	INFO("Started...");
-	ControlTask& task = *(ControlTask*)pThis;
+	ControlTask& task = *(ControlTask*) pThis;
 	TCPPort& port = task.protocol.GetControlPort();
 	SerialPort& portMP = task.protocol.GetMPPort();
 	CmdPacket cmd;
 	enum CommunicationCommand eCmd;
 
-	while(true)
+	while (true)
 	{
 		if (task.modem.IsPowerOff())
 		{
@@ -52,74 +53,79 @@ void* ControlTask::doProcess(void* pThis)
 
 		if (!task.modem.IsPowerOff())
 		{
-		try
-		{
-			eCmd = task.protocol.GetCommand(port,cmd);
-			TRACE("Get Command %s",cmdWord[eCmd]);
-			switch(eCmd)
+			try
 			{
-			case DataRequest:
-			case MPHealthCheck:
-				break;
-			case GetCondition:
-			case SetCondition:
-			case GetPreAmp:
-			case GetADCSetting:
-			case GetSpectrumSetting:
-			case SetLowHiDoesRateAlarmReset:
-			case GetTime:
-			case RequestDoseRate:
-			case RequestSpectrum:
-			case RequestDoseRateAlarm:
-			case Request40KAction:
-			case RequestGPS:
-				task.protocol.TransferCmd(portMP,port,cmd);
-				break;
-			case GetNetworkSetting:
-				break;
-			case SetTransmitUnitHardwareReset:
-				break;
-			case SetTransmitUnitReset:
-				break;
-			case SetTransmitUnitMemortClear:
-				break;
-			case SetTime:
-				//TODO:SetLocalTime();
-				task.protocol.TransferCmd(portMP,port,cmd);
-				break;
-			case ConfirmDoseRate:
-			case ConfirmSpectrum:
-			case ConfirmDoseRateAlarm:
-			case Confirm40KAction:
-			case ConfirmGPS:
-			{
-				HistoryDataRequestCmd hcmd(cmd);
-				task.protocol.HistoryDataTransfer(portMP,port,hcmd);
-				break;
-			}
-			case RequestDataCancel:
-			case DataTerminate:
-			case SetDataPort:
-			case SetControlPort:
-				break;
-			case ControlPortHealthCheck:
-				//TODO:send ACK frame;
-				break;
-			case CMD_END:
-				TRACE("Got no command");
-				break;
-			};
+				eCmd = task.protocol.GetCommand(port, cmd);
+				TRACE("Get Command %s",cmdWord[eCmd]);
+				switch (eCmd)
+				{
+				case DataRequest:
+				case MPHealthCheck:
+					break;
+				case GetCondition:
+				case SetCondition:
+				case GetPreAmp:
+				case GetADCSetting:
+				case GetSpectrumSetting:
+				case SetLowHiDoesRateAlarmReset:
+				case GetTime:
+				case RequestDoseRate:
+				case RequestSpectrum:
+				case RequestDoseRateAlarm:
+				case Request40KAction:
+				case RequestGPS:
+					task.protocol.TransferCmd(portMP, port, cmd);
+					break;
+				case GetNetworkSetting:
+					break;
+				case SetTransmitUnitHardwareReset:
+					break;
+				case SetTransmitUnitReset:
+					break;
+				case SetTransmitUnitMemortClear:
+					break;
+				case SetTime:
+					//TODO:SetLocalTime();
+					task.protocol.TransferCmd(portMP, port, cmd);
+					break;
+				case ConfirmDoseRate:
+				case ConfirmSpectrum:
+				case ConfirmDoseRateAlarm:
+				case Confirm40KAction:
+				case ConfirmGPS:
+				{
+					HistoryDataRequestCmd hcmd(cmd);
+					task.protocol.HistoryDataTransfer(portMP, port, hcmd);
+					break;
+				}
+				case RequestDataCancel:
+				case DataTerminate:
+				case SetDataPort:
+				case SetControlPort:
+					break;
+				case ControlPortHealthCheck:
+					//TODO:send ACK frame;
+					break;
+				case CMD_END:
+					TRACE("Got no command");
+					break;
+				};
 
-		}
-		catch (ChannelException& e)
-		{
-			WARNING("Exception:%s",e.what());
-			if (e.bUnConnected)
+			} catch (ChannelException& e)
 			{
-				task.protocol.NegoiateControlChannel(port);
-			}
+				WARNING("Exception:%s",e.what());
+				if (port.IsUnReachable())
+				{
+					INFO("network fail,reboot");
+					sleep(10);
+					system("reboot");
+				}
+				if (e.bUnConnected)
+				{
+					task.protocol.NegoiateControlChannel(port);
+				}
 
-		}
+			}
 		}
 
 		sleep(1);
