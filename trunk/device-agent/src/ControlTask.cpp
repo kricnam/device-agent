@@ -117,7 +117,8 @@ void* ControlTask::doProcess(void* pThis)
 				if (port.IsUnReachable())
 				{
 					INFO("network fail,reboot");
-					sleep(10);
+					task.modem.PowerOff();
+					sleep(3);
 					system("reboot");
 				}
 				if (e.bUnConnected)
