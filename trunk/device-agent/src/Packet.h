@@ -48,7 +48,7 @@ enum CommunicationCommand
 	CMD_END
 };
 
-extern char* cmdWord[];
+extern const char* cmdWord[];
 
 class Packet {
 public:
